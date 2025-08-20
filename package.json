@@ -1,7 +1,7 @@
 {
   "name": "autogpt",
   "version": "1.0.0",
-  "description": "Agente Autônomo é uma extensão de navegador que automatiza fluxos de trabalho de agentes de IA em plataformas populares como o ChatGPT e o Claude. Ela injeta scripts nos domínios suportados e executa um service worker em segundo plano para gerenciar as solicitações à API do Agente Autônomo.",
+  "description": "SSA - SERVO SEM ALMA é uma extensão de navegador que automatiza fluxos de trabalho de agentes de IA em plataformas populares como o ChatGPT e o Claude. Ela injeta scripts nos domínios suportados e executa um service worker em segundo plano para gerenciar as solicitações à API do SSA - SERVO SEM ALMA.",
   "main": "background.js",
   "directories": {
     "doc": "docs"
@@ -14,6 +14,8 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "jsdom": "^26.1.0"
+    "@playwright/test": "^1.55.0",
+    "jsdom": "^26.1.0",
+    "playwright": "^1.55.0"
   }
 }
