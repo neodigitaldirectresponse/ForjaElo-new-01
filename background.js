@@ -4,7 +4,7 @@
 // Initialize default prompt delay on first install
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.get(
-    ['promptDelay', 'promptDelayMin', 'promptDelayMax', 'operationMode', 'typingMode'],
+    ['promptDelay', 'promptDelayMin', 'promptDelayMax', 'operationMode'],
     (data) => {
       let { promptDelayMin: min, promptDelayMax: max, promptDelay } = data;
       if (min === undefined || max === undefined) {
@@ -18,9 +18,6 @@ chrome.runtime.onInstalled.addListener(() => {
       }
       if (!data.operationMode) {
         chrome.storage.local.set({ operationMode: 'cli' });
-      }
-      if (!data.typingMode) {
-        chrome.storage.local.set({ typingMode: 'templateFast' });
       }
     }
   );

@@ -81,9 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
     applyTool: 'applyTool',
     selectionModel: 'selectionModel',
     operationMode: 'operationMode',
-    typingMode: 'typingMode',
-    typingOptions: 'typingOptions',
-    openTestPage: 'openTestPage',
     openChatGPT: 'openChatGPT',
     openShortcuts: 'openShortcuts',
     adsPowerApi: 'adsPowerApi',
@@ -268,14 +265,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   els.operationMode.addEventListener('change', () => {
     storageSet({ operationMode: els.operationMode.value || 'cli' });
-  });
-
-  // Load typing mode
-  storageGet({ typingMode: 'templateFast' }, (data) => {
-    els.typingMode.value = data.typingMode;
-  });
-  els.typingMode.addEventListener('change', () => {
-    storageSet({ typingMode: els.typingMode.value || 'templateFast' });
   });
 
   // Load AdsPower API base
@@ -648,11 +637,6 @@ document.addEventListener('DOMContentLoaded', () => {
   els.demoError.addEventListener('click', () => {
     showLoading();
     sendToActiveTab({ action: 'demoError' }, hideLoading);
-  });
-
-  els.openTestPage.addEventListener('click', () => {
-    const url = chrome.runtime.getURL('simulation/teste-simulacao.html');
-    chrome.tabs.create({ url });
   });
 
   els.openChatGPT.addEventListener('click', () => {
