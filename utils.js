@@ -36,7 +36,21 @@
     'ForjaElo · Devocional 15min': ['forjaelo', 'devocional', '15'],
     'ForjaElo · Processo em 7 passos': ['forjaelo', 'processo', '7'],
     'ForjaElo · Roteiro Ide (90s)': ['forjaelo', 'roteiro', 'ide'],
-    'ForjaElo · Detox 24h': ['forjaelo', 'detox', '24h']
+    'ForjaElo · Detox 24h': ['forjaelo', 'detox', '24h'],
+    'A) Dia Completo (abrange todos os elos)': ['forjaelo', 'dia', 'completo'],
+    'B) Projeto • do zero ao envio (kickoff → envio 1)': ['forjaelo', 'projeto'],
+    'C) Semana Completa (planejamento → retrospectiva)': ['forjaelo', 'semana', 'completa'],
+    'D) Funil de Parcerias (Ide + Resultado)': ['forjaelo', 'funil', 'parcerias'],
+    'E) Qualidade & Excelência (Talentos)': ['forjaelo', 'qualidade'],
+    'F) Foco Profundo (proteção + execução)': ['forjaelo', 'foco', 'profundo'],
+    'G) Energia & Antifragilidade (Box + Refúgio)': ['forjaelo', 'energia'],
+    'H) Limites & Comunhão (Central)': ['forjaelo', 'limites'],
+    'I) Finanças & Resultado (Talentos)': ['forjaelo', 'financas'],
+    'J) Crise/Incêndio (modo “corte seguro”)': ['forjaelo', 'crise'],
+    'K) Revisão Diária & Arquivação': ['forjaelo', 'revisao'],
+    'L) Biblioteca de Mensagens (Ide) — uso responsável': ['forjaelo', 'biblioteca', 'mensagens'],
+    'M) Aprendizado Contínuo (log leve)': ['forjaelo', 'aprendizado'],
+    'N) Top-3 Neutro (rápido, para o dia)': ['forjaelo', 'top', '3']
   };
 
   function detectTool(prompt) {
