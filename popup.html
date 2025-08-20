@@ -105,6 +105,23 @@
       background-color: var(--color-primary-hover);
     }
 
+    a.button-link {
+      display: block;
+      width: 100%;
+      text-align: center;
+      cursor: pointer;
+      background-color: var(--color-primary);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 0.5em;
+      margin-top: 0.5em;
+      text-decoration: none;
+      transition: background-color var(--transition);
+    }
+    a.button-link:hover, a.button-link:focus {
+      background-color: var(--color-primary-hover);
+    }
+
     /* Collapsible styles removed: sections are always visible */
 
     /* Spinner/Overlay */
@@ -190,6 +207,7 @@
       <p style="font-size:0.9rem; margin:0.25em 0;">SSA 6.7 (Executor Cego) só organiza o que você decidir.</p>
       <button id="toggleTheme" aria-label="Alternar tema">🌙</button>
       <button id="openChatGPT">Abrir ChatGPT</button>
+      <a href="README.md" target="_blank" class="button-link">README</a>
     </header>
     <p style="font-size:0.85rem; margin-bottom:0.5em;">
       Configure os atalhos globais em
