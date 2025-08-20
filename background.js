@@ -39,7 +39,7 @@ function notify(message) {
   chrome.notifications.create({
     type: 'basic',
     iconUrl: 'icon-128.png',
-    title: 'Agente Autônomo',
+      title: 'SSA - SERVO SEM ALMA',
     message,
   });
 }

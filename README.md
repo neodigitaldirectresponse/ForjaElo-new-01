@@ -1,6 +1,6 @@
-# Extensão do Chrome Agente Autônomo
+# Extensão do Chrome SSA - SERVO SEM ALMA
 
-Agente Autônomo é uma extensão de navegador que automatiza fluxos de trabalho de agentes de IA em plataformas populares como o ChatGPT e o Claude. Ela injeta scripts nos domínios suportados e executa um service worker em segundo plano para gerenciar as solicitações à API do Agente Autônomo.
+SSA - SERVO SEM ALMA é uma extensão de navegador que automatiza fluxos de trabalho de agentes de IA em plataformas populares como o ChatGPT e o Claude. Ela injeta scripts nos domínios suportados e executa um service worker em segundo plano para gerenciar as solicitações à API do SSA - SERVO SEM ALMA.
 
 ## Versão Local
 
@@ -26,7 +26,7 @@ Este repositório agora inclui uma versão mínima offline da extensão. A compi
 1. Clone ou baixe este repositório.
 2. No Chrome, abra `chrome://extensions` e ative o **Modo desenvolvedor**.
 3. Clique em **Carregar sem compactação** e selecione esta pasta.
-4. O ícone "Agente Autônomo" aparecerá na barra de extensões.
+4. O ícone "SSA - SERVO SEM ALMA" aparecerá na barra de extensões.
 
 ## Uso
 

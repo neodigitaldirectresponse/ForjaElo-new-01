@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Agente Autônomo Local",
+  "name": "SSA - SERVO SEM ALMA",
   "version": "8.6",
-  "description": "Cópia local do Agente Autônomo sem chamadas de API",
+  "description": "Cópia local do SSA - SERVO SEM ALMA sem chamadas de API",
   "action": {
     "default_icon": "icon-34.png",
     "default_popup": "popup.html"
