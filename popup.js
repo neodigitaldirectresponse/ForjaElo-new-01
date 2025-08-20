@@ -77,9 +77,6 @@ document.addEventListener('DOMContentLoaded', () => {
     exportJson: 'exportJson',
     exportLogs: 'exportLogs',
     resetChat: 'resetChat',
-    toolSelect: 'toolSelect',
-    applyTool: 'applyTool',
-    selectionModel: 'selectionModel',
     openChatGPT: 'openChatGPT',
     openShortcuts: 'openShortcuts',
     status: 'status',
@@ -249,14 +246,6 @@ document.addEventListener('DOMContentLoaded', () => {
     els.scCopyResult.value = shortcuts.copyResult;
     els.scDemoError.value = shortcuts.demoError;
   });
-  // Load selection model
-  storageGet({ selectionModel: 'keyboard' }, (data) => {
-    els.selectionModel.value = data.selectionModel;
-  });
-  els.selectionModel.addEventListener('change', () => {
-    storageSet({ selectionModel: els.selectionModel.value || 'keyboard' });
-  });
-
   // Load delays
   storageGet(['promptDelay', 'promptDelayMin', 'promptDelayMax'], (res) => {
     let { promptDelay, promptDelayMin, promptDelayMax } = res;
@@ -418,138 +407,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Tool application with automatic selection based on clipboard
-  function normalize(str) {
-    return str
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase();
-  }
-
-  function levenshtein(a, b) {
-    const m = [];
-    for (let i = 0; i <= b.length; i++) {
-      m[i] = [i];
-    }
-    for (let j = 0; j <= a.length; j++) {
-      m[0][j] = j;
-    }
-    for (let i = 1; i <= b.length; i++) {
-      for (let j = 1; j <= a.length; j++) {
-        if (b.charAt(i - 1) === a.charAt(j - 1)) {
-          m[i][j] = m[i - 1][j - 1];
-        } else {
-          m[i][j] = Math.min(
-            m[i - 1][j - 1] + 1,
-            m[i][j - 1] + 1,
-            m[i - 1][j] + 1
-          );
-        }
-      }
-    }
-    return m[b.length][a.length];
-  }
-
-  function wordSim(a, b) {
-    const dist = levenshtein(a, b);
-    return 1 - dist / Math.max(a.length, b.length);
-  }
-
-  function toolSim(snippetWords, toolWords) {
-    let total = 0;
-    toolWords.forEach((tw) => {
-      let best = 0;
-      snippetWords.forEach((sw) => {
-        const s = wordSim(sw, tw);
-        if (s > best) best = s;
-      });
-      total += best;
-    });
-    return total / toolWords.length;
-  }
-
-  function getFirstFiveWords(prompt) {
-    return prompt
-      .trim()
-      .split(/\s+/)
-      .slice(0, 5)
-      .join(' ');
-  }
-
-  const toolKeywords = {
-    'Criar imagem': ['criar', 'imagem'],
-    'Pensar por mais tempo': ['pensar', 'por', 'mais', 'tempo'],
-    'Investigar': ['investigar'],
-    'Busca na Web': ['busca', 'na', 'web'],
-    'Lousa': ['lousa'],
-  };
-
-  function detectTool(prompt) {
-    const firstFive = getFirstFiveWords(normalize(prompt));
-    const words = firstFive
-      .split(/\s+/)
-      .map((w) => w.replace(/[^a-z0-9]/gi, ''));
-
-    for (const [toolName, keywords] of Object.entries(toolKeywords)) {
-      const matches = keywords.every((k) => words.includes(k));
-      if (matches) return toolName;
-    }
-    return '';
-  }
-
-  function guessTool(text) {
-    return detectTool(text);
-  }
-
-  // Apply selected tool automatically when changed
-  els.toolSelect.addEventListener('change', () => {
-    const tool = els.toolSelect.value;
-    if (!tool) return;
-    showLoading();
-    els.status.innerHTML = '<span class="spinner"></span>Selecionando...';
-    sendToActiveTab({ action: 'selectTool', tool }, (res) => {
-      if (res?.success) {
-        els.status.textContent = `Ferramenta ativa: ${res.active}`;
-      } else {
-        els.status.textContent = 'Falha ao aplicar ferramenta';
-      }
-      setTimeout(() => (els.status.textContent = ''), 2000);
-      hideLoading();
-    });
-  });
-
-  els.applyTool.addEventListener('click', async () => {
-    showLoading();
-    const clip = await safeReadClipboard();
-    const text = (clip || '').trim();
-      if (!text) {
-        els.status.textContent = 'Área de transferência vazia';
-        setTimeout(() => (els.status.textContent = ''), 2000);
-        return hideLoading();
-      }
-
-      const tool = guessTool(text) || els.toolSelect.value;
-      if (!tool) {
-        els.status.textContent = 'Nenhuma ferramenta detectada';
-        setTimeout(() => (els.status.textContent = ''), 2000);
-        return hideLoading();
-      }
-
-      els.status.innerHTML = '<span class="spinner"></span>Selecionando...';
-      sendToActiveTab({ action: 'selectTool', tool }, (res) => {
-        const spinner = $id('popupSpinner');
-        spinner && spinner.remove();
-        if (res?.success) {
-          els.status.textContent = `Ferramenta ativa: ${res.active}`;
-          sendToActiveTab({ action: 'pasteStart' }, hideLoading);
-        } else {
-          els.status.textContent = 'Falha ao aplicar ferramenta';
-          hideLoading();
-        }
-        console.log('Ferramenta escolhida:', tool);
-        setTimeout(() => (els.status.textContent = ''), 2000);
-      });
-    });
-
   async function runAutomationShortcut() {
     showLoading();
     const clip = await safeReadClipboard();
@@ -702,11 +559,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return parts.join('+');
   }
   document.addEventListener('keydown', (e) => {
-    if (e.key === '/' && !e.ctrlKey && !e.altKey && !e.metaKey) {
-      e.preventDefault();
-      els.toolSelect.focus();
-      return;
-    }
     if (['INPUT','TEXTAREA'].includes(e.target.tagName) || e.target.isContentEditable) return;
     const combo = formatCombo(e);
     if (combo === shortcuts.queue)      { e.preventDefault(); els.queueBtn.click(); }
@@ -748,13 +600,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof logger !== 'undefined' && logger.wrapObject) {
     logger.wrapObject({
       renderList,
-      normalize,
-      levenshtein,
-      wordSim,
-      toolSim,
-      getFirstFiveWords,
-      detectTool,
-      guessTool,
       formatCombo,
     }, 'popup.');
   }
