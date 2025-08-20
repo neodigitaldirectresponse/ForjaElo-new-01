@@ -77,6 +77,8 @@ SSA, com base no texto abaixo, crie: (1) objetivo em 1 frase; (2) 3 passos míni
 
 3. Para o dia a dia, use os **Comandos** abaixo (atalhos).
 
+Para enfileirar vários prompts de uma vez, abra o popup da extensão e digite cada mensagem separada por `~`, por exemplo: `prompt1~prompt2~prompt3`.
+
 > Dica: crie um atalho /ssa no seu app de notas com o prompt base.
 
 ---
