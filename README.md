@@ -50,6 +50,8 @@ Cada mensagem em fila espera um atraso configurável antes de ser enviada. Use *
 
 Os modelos de prompt padrão vêm de `prompts.js`. Edite esse arquivo para adicionar ou modificar os prompts exibidos no menu. Recarregue a extensão após as alterações para ver suas entradas personalizadas.
 
+O pacote já traz integrado um conjunto de prompts **ForjaElo** (SSA, Scorecard, Devocional, Processo, Roteiro e Detox), facilitando a automação dos fluxos descritos no guia.
+
 ### Exportar Logs
 
 Para solucionar problemas, a extensão grava logs do console do script de conteúdo. Cada entrada indica o **nível** (info ou error) para facilitar a análise. Clique em **Exportar Logs** no popup para baixar um arquivo JSON com as entradas recentes.

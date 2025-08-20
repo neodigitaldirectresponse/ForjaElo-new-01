@@ -146,7 +146,13 @@ const toolKeywords = {
   'Pensar por mais tempo': ['pensar', 'por', 'mais', 'tempo'],
   'Investigar': ['investigar'],
   'Busca na Web': ['busca', 'na', 'web'],
-  'Lousa': ['lousa']
+  'Lousa': ['lousa'],
+  'ForjaElo · SSA (Organizador)': ['forjaelo', 'ssa'],
+  'ForjaElo · Scorecard (CSV)': ['forjaelo', 'scorecard'],
+  'ForjaElo · Devocional 15min': ['forjaelo', 'devocional', '15'],
+  'ForjaElo · Processo em 7 passos': ['forjaelo', 'processo', '7'],
+  'ForjaElo · Roteiro Ide (90s)': ['forjaelo', 'roteiro', 'ide'],
+  'ForjaElo · Detox 24h': ['forjaelo', 'detox', '24h']
 };
 
 function detectTool(prompt) {
