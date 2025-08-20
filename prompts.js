@@ -16,7 +16,7 @@ const BASE_PROMPTS = [
 ];
 
 // Pacote de prompts da ForjaElo
-window.FORJA_PROMPTS = [
+const FORJA_PROMPTS = [
   {
     title: "ForjaElo · SSA (Organizador)",
     text: `Você é o Servo sem alma (SSA). Apenas organiza, verifica e padroniza meu material.
@@ -57,6 +57,10 @@ Use SOMENTE meu rascunho:
   }
 ];
 
-// Combina prompts existentes com os da ForjaElo
-const prompts = [...BASE_PROMPTS, ...window.FORJA_PROMPTS];
+// Estrutura os prompts por grupos para facilitar o uso no popup
+window.PROMPT_GROUPS = [
+  { label: 'Prompts Padrão', items: BASE_PROMPTS },
+  { label: 'ForjaElo', items: FORJA_PROMPTS }
+];
+
 
