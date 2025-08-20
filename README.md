@@ -66,6 +66,8 @@
 
 **Não é app.** É uma **extensão de prompt** para qualquer LLM/assistente.
 
+No popup da extensão há um botão **README** que abre esta documentação no navegador.
+
 1. **Cole** este README no seu espaço de notas/projeto.
 2. Abra seu assistente favorito (ex.: ChatGPT) e chame:
 
