@@ -80,10 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
     toolSelect: 'toolSelect',
     applyTool: 'applyTool',
     selectionModel: 'selectionModel',
-    operationMode: 'operationMode',
     openChatGPT: 'openChatGPT',
     openShortcuts: 'openShortcuts',
-    adsPowerApi: 'adsPowerApi',
     status: 'status',
     serviceStatus: 'serviceStatus',
     lastResponse: 'lastResponse',
@@ -257,22 +255,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   els.selectionModel.addEventListener('change', () => {
     storageSet({ selectionModel: els.selectionModel.value || 'keyboard' });
-  });
-
-  // Load operation mode
-  storageGet({ operationMode: 'cli' }, (data) => {
-    els.operationMode.value = data.operationMode;
-  });
-  els.operationMode.addEventListener('change', () => {
-    storageSet({ operationMode: els.operationMode.value || 'cli' });
-  });
-
-  // Load AdsPower API base
-  storageGet({ adsPowerApiBase: 'http://local.adspower.net:50325' }, (data) => {
-    els.adsPowerApi.value = data.adsPowerApiBase;
-  });
-  els.adsPowerApi.addEventListener('change', () => {
-    storageSet({ adsPowerApiBase: els.adsPowerApi.value || 'http://local.adspower.net:50325' });
   });
 
   // Load delays

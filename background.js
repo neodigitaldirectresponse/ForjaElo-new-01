@@ -4,7 +4,7 @@
 // Initialize default prompt delay on first install
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.get(
-    ['promptDelay', 'promptDelayMin', 'promptDelayMax', 'operationMode'],
+    ['promptDelay', 'promptDelayMin', 'promptDelayMax'],
     (data) => {
       let { promptDelayMin: min, promptDelayMax: max, promptDelay } = data;
       if (min === undefined || max === undefined) {
@@ -16,27 +16,12 @@ chrome.runtime.onInstalled.addListener(() => {
         const randomDelay = Math.floor(Math.random() * (max - min + 1)) + min;
         chrome.storage.local.set({ promptDelay: randomDelay });
       }
-      if (!data.operationMode) {
-        chrome.storage.local.set({ operationMode: 'cli' });
-      }
     }
   );
 
   // Open ChatGPT automatically on first installation
   const redirectUrl = chrome.runtime.getURL('redirect.html');
   chrome.tabs.create({ url: redirectUrl });
-});
-
-let adsPowerApiBase = 'http://local.adspower.net:50325';
-chrome.storage.local.get({ adsPowerApiBase }, (data) => {
-  adsPowerApiBase = data.adsPowerApiBase;
-  addLog(`AdsPower API base set to ${adsPowerApiBase}`);
-});
-chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && changes.adsPowerApiBase) {
-    adsPowerApiBase = changes.adsPowerApiBase.newValue;
-    addLog(`AdsPower API base changed to ${adsPowerApiBase}`);
-  }
 });
 
 // Store log entries safely
@@ -77,42 +62,6 @@ function deleteQueueItem(index) {
       chrome.storage.local.set({ queuedMessages: queue }, notifyQueueUpdated);
     }
   });
-}
-
-// Send request to AdsPower with detailed logging
-function sendAdsPowerRequest(action, payload = {}) {
-  const url = `${adsPowerApiBase}/automation/${action}`;
-  const options = {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  };
-  const logPrefix = `[AdsPower ${action}]`;
-  console.log(logPrefix, 'Sending to', url, payload);
-  addLog(`${logPrefix} Sending to ${url} with payload ${JSON.stringify(payload)}`, 'info');
-  if (!navigator.onLine) {
-    const offlineMsg = 'Navegador offline. Não foi possível contatar AdsPower.';
-    console.error(logPrefix, offlineMsg);
-    addLog(`${logPrefix} ${offlineMsg}`, 'error');
-    notify(`AdsPower API error: ${offlineMsg}`);
-    return;
-  }
-  fetch(url, options)
-    .then(async (res) => {
-      if (!res.ok) {
-        const text = await res.text().catch(() => '');
-        console.error(logPrefix, 'HTTP', res.status, text);
-        addLog(`${logPrefix} HTTP ${res.status} ${text}`, 'error');
-      } else {
-        addLog(`${logPrefix} Success ${res.status}`);
-      }
-    })
-    .catch((err) => {
-      console.error(logPrefix, err);
-      const errMsg = err && err.message ? err.message : String(err);
-      addLog(`${logPrefix} Error ${errMsg}`, 'error');
-      notify(`AdsPower API error: ${errMsg}. Verifique se o endereço ${adsPowerApiBase} está acessível.`);
-    });
 }
 
 function normalize(str) {
@@ -161,8 +110,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ status: "serviço em segundo plano em execução" });
   } else if (request.type === "notify") {
     notify(request.message || 'Notificação');
-  } else if (request.type === 'adsPowerRequest') {
-    sendAdsPowerRequest(request.action, request.payload);
   }
   return true;
 });
@@ -198,7 +145,6 @@ if (typeof logger !== 'undefined' && logger.wrapObject) {
     notify,
     notifyQueueUpdated,
     deleteQueueItem,
-    sendAdsPowerRequest,
     normalize,
     getFirstFiveWords,
     detectTool,
