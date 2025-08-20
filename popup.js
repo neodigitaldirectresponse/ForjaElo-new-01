@@ -262,12 +262,18 @@ document.addEventListener('DOMContentLoaded', () => {
     els.note.value = res.savedNote || '';
   });
 
-  // Populate promptSelect
-  prompts.forEach((p, i) => {
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = p.title;
-    els.promptSelect.appendChild(opt);
+  // Populate promptSelect com grupos de prompts
+  const promptGroups = window.PROMPT_GROUPS || [];
+  promptGroups.forEach((group, gIdx) => {
+    const og = document.createElement('optgroup');
+    og.label = group.label;
+    group.items.forEach((p, pIdx) => {
+      const opt = document.createElement('option');
+      opt.value = `${gIdx}:${pIdx}`;
+      opt.textContent = p.title;
+      og.appendChild(opt);
+    });
+    els.promptSelect.appendChild(og);
   });
 
   // --- Event Listeners --------------------------------------------------------
@@ -324,9 +330,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Copy prompt
   els.copyPrompt.addEventListener('click', () => {
     showLoading();
-    const idx = parseInt(els.promptSelect.value, 10);
-    if (isNaN(idx) || !prompts[idx]) return hideLoading();
-    navigator.clipboard.writeText(prompts[idx].text).then(() => {
+    const [gIdx, pIdx] = (els.promptSelect.value || '').split(':').map(Number);
+    const group = promptGroups[gIdx];
+    const prompt = group && group.items[pIdx];
+    if (!prompt) return hideLoading();
+    navigator.clipboard.writeText(prompt.text).then(() => {
       els.status.textContent = 'Prompt copiado';
       setTimeout(() => (els.status.textContent = ''), 1000);
       hideLoading();
