@@ -13,7 +13,6 @@ Este repositório agora inclui uma versão mínima offline da extensão. A compi
 - Funciona totalmente a partir do popup, sem acesso à rede.
 - Exporte respostas do ChatGPT como um arquivo JSON pelo popup.
 - Os resultados da automação são salvos automaticamente em segundo plano e exibidos quando o popup é aberto.
-- Em modo CLI, o resultado final também é enviado para a API AdsPower.
 - Redefina o resultado armazenado do chat atual com o novo **Resetar Chat**.
 - O popup mostra continuamente o status do serviço em segundo plano e do script de conteúdo.
 - Escolha a ferramenta ativa do ChatGPT (Criar imagem, Busca na Web, etc.) diretamente no popup.
@@ -32,8 +31,6 @@ Este repositório agora inclui uma versão mínima offline da extensão. A compi
 ## Uso
 
 Use o ícone da barra de ferramentas para abrir o popup. Toda a funcionalidade está contida no próprio popup e seus dados são armazenados localmente usando `chrome.storage`.
-
-Por padrão a extensão opera em **modo CLI**, destinado a automação via AdsPower. Caso prefira interação manual, abra o popup e selecione **Manual** em *Modo de operação*.
 
 ### Redirecionamento para ChatGPT
 
@@ -56,7 +53,6 @@ Os modelos de prompt padrão vêm de `prompts.js`. Edite esse arquivo para adici
 ### Exportar Logs
 
 Para solucionar problemas, a extensão grava logs do console do script de conteúdo. Cada entrada indica o **nível** (info ou error) para facilitar a análise. Clique em **Exportar Logs** no popup para baixar um arquivo JSON com as entradas recentes.
-As chamadas para a API AdsPower também são registradas pelo service worker, incluindo a URL utilizada, o payload enviado e o status de cada resposta.
 
 ### Notificações e feedback
 
@@ -85,63 +81,6 @@ Devido ao limite de quatro atalhos imposto pelo Chrome, apenas esses comandos s�
 
 Com esses comandos é possível iniciar a extensão e realizar toda a automação sem recorrer ao mouse. Ajuste-os conforme sua preferência.
 O atalho de demonstração digita mais de 30 caracteres errados e então corrige tudo usando diversas formas de seleção e exclusão.
-
-### Modo CLI via AdsPower
-
-Para integrações de RPA, a extensão expõe um modo de operação por linha de comando que utiliza a API do AdsPower. Ao iniciar a extensão, este modo é ativado automaticamente e permite que scripts controlem o envio de prompts e o andamento da automação.
-
-Caso não deseje automatizar via AdsPower, basta abrir o popup e mudar a opção para **Manual** em *Modo de operação*.
-
-No mesmo painel é possível definir a **URL da API AdsPower**, permitindo integrar a extensão a diferentes endereços locais ou remotos.
-
-#### Implementação
-
-O modo CLI comunica-se com o AdsPower por meio de requisições HTTP locais. A
-função `adsPowerRequest` em `content.js` apenas encaminha a ação para o service
-worker, que por sua vez executa `fetch` para
-`<URL-da-API>/automation/<acao>` (por padrão `http://local.adspower.net:50325`).
-Quando a automação é iniciada,
-`startAutomationAction()` dispara `adsPowerRequest('startAutomation',
-{ queueLength })`. Cada mensagem enviada chama `adsPowerRequest('messageSent',
-{ message })`. Após salvar o resultado, `finalizeAutomation()` envia
-`adsPowerRequest('saveResult', { key: conversationKey, result })` e então
-executa `adsPowerRequest('finishAutomation')`.
-
-O `background.js` define `operationMode: 'cli'` na instalação da extensão e o
-valor é salvo em `chrome.storage.local`. Esse modo pode ser trocado para
-**Manual** no popup caso se deseje interromper as notificações para o AdsPower.
-
-### Automação via MultiLogin e Outras Ferramentas de RPA
-
-Apesar de o suporte nativo utilizar a API do AdsPower, a extensão pode ser
-integrada a qualquer solução de multi-login que disponha de uma interface HTTP,
-como o MultiLogin. Para isso, adapte a função `adsPowerRequest` em
-`content.js` apontando para o endpoint da plataforma desejada:
-
-```javascript
-const API_BASE = 'http://localhost:35000/api/v1';
-
-function adsPowerRequest(action, payload = {}) {
-  const url = `${API_BASE}/automation/${action}`;
-  fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-}
-```
-
-O fluxo de chamadas segue o padrão `startAutomation`, `messageSent` e
-`finishAutomation`, permitindo que a ferramenta externa monitore cada etapa da
-fila de prompts.
-
-1. **Habilite a API local** na solução de RPA escolhida.
-2. **Edite `content.js`** conforme o exemplo acima, ajustando a URL e o formato
-   da requisição.
-3. **Recarregue a extensão** no ambiente controlado e execute sua automação.
-
-Qualquer plataforma que aceite comandos HTTP pode assim interagir com a
-extensão, mantendo o controle das sessões em múltiplos perfis isolados.
 
 ## Desenvolvimento
 
@@ -193,12 +132,6 @@ Estes atalhos já estão integrados ao ChatGPT. Consulte a lista antes de defini
 | **Configurações & Ajuda**         |                          |                    |                                                                   |
 | Mostrar atalhos                   | Ctrl + /                 | ⌘ + /              | Exibe a janela com todos os atalhos disponíveis.                  |
 | Definir instruções personalizadas | Ctrl + Shift + I         | ⌘ + Shift + I      | Abre o modal para editar suas instruções de sistema.              |
-
-## Solução de Problemas
-
-### Erro "Failed to fetch"
-
-Se o log exibir `AdsPower API error TypeError: Failed to fetch`, verifique se o endereço configurado em **AdsPower API** no popup está acessível. Por padrão a extensão usa `http://local.adspower.net:50325`. Certifique-se de que o serviço da API esteja em execução nesse endereço ou ajuste a URL para o host e porta corretos.
 
 ## Testes
 

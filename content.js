@@ -39,7 +39,6 @@ let automationFinished = false;
 let autoCopyAfterAutomation = false;
 let selectedTool = null; // currently applied tool name
 let selectionModel = 'keyboard';
-let operationMode = 'cli';
 let shortcuts = {
   queue: 'Ctrl+Enter',
   select: 'Ctrl+Shift+S',
@@ -74,14 +73,6 @@ function simulateKey(target, key, opts = {}) {
   });
 }
 
-
-function adsPowerRequest(action, payload = {}) {
-  chrome.runtime.sendMessage({
-    type: 'adsPowerRequest',
-    action,
-    payload,
-  });
-}
 
 async function safeReadClipboard() {
   if (!navigator.clipboard) {
@@ -275,18 +266,12 @@ chrome.storage.local.get({ shortcuts: shortcuts }, (data) => {
 chrome.storage.local.get({ selectionModel: 'keyboard' }, (data) => {
   selectionModel = data.selectionModel;
 });
-chrome.storage.local.get({ operationMode: 'cli' }, (data) => {
-  operationMode = data.operationMode;
-});
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && changes.shortcuts) {
     shortcuts = { ...shortcuts, ...(changes.shortcuts.newValue || {}) };
   }
   if (area === 'local' && changes.selectionModel) {
     selectionModel = changes.selectionModel.newValue;
-  }
-  if (area === 'local' && changes.operationMode) {
-    operationMode = changes.operationMode.newValue;
   }
 });
 
@@ -741,10 +726,6 @@ function finalizeAutomation() {
       copyResultAction();
       autoCopyAfterAutomation = false;
     }
-    if (operationMode === 'cli') {
-      adsPowerRequest('saveResult', { key: conversationKey, result: resultToSave });
-      adsPowerRequest('finishAutomation');
-    }
     setTimeout(() => {
       window.location.reload();
     }, 1000);
@@ -964,9 +945,6 @@ async function pasteStartAutomationAction() {
 }
 
 function startAutomationAction() {
-  if (operationMode === 'cli') {
-    adsPowerRequest('startAutomation', { queueLength: messageQueue.length });
-  }
   processMessageQueue();
 }
 
@@ -1043,9 +1021,6 @@ async function processMessageQueue() {
 
   if (success) {
     lastMessageTime = Date.now();
-    if (operationMode === 'cli') {
-      adsPowerRequest('messageSent', { message });
-    }
     messageQueue.shift();
     chrome.storage.local.set({ queuedMessages: messageQueue });
     const settings = await chrome.storage.local.get([
@@ -1389,7 +1364,6 @@ document.addEventListener('keydown', handleShortcut, true);
 if (typeof logger !== 'undefined' && logger.wrapObject) {
   logger.wrapObject({
     randomDelay,
-    adsPowerRequest,
     normalize,
     getFirstFiveWords,
     splitMessages,
