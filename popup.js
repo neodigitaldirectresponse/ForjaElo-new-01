@@ -95,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
     scQueue: 'scQueue',
     scClearQueue: 'scClearQueue',
     scCopyPrompt: 'scCopyPrompt',
-    scApplyTool: 'scApplyTool',
     scSaveNote: 'scSaveNote',
     scLoadNote: 'scLoadNote',
     scExportJson: 'scExportJson',
@@ -144,7 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
     els.scQueue,
     els.scClearQueue,
     els.scCopyPrompt,
-    els.scApplyTool,
     els.scSaveNote,
     els.scLoadNote,
     els.scExportJson,
@@ -232,7 +230,6 @@ document.addEventListener('DOMContentLoaded', () => {
     els.scQueue.value = shortcuts.queue;
     els.scClearQueue.value = shortcuts.clearQueue;
     els.scCopyPrompt.value = shortcuts.copyPrompt;
-    els.scApplyTool.value = shortcuts.applyTool;
     els.scSaveNote.value = shortcuts.saveNote;
     els.scLoadNote.value = shortcuts.loadNote;
     els.scExportJson.value = shortcuts.exportJson;
@@ -492,10 +489,10 @@ document.addEventListener('DOMContentLoaded', () => {
   els.saveShortcuts.addEventListener('click', () => {
     showLoading();
     shortcuts = {
+      ...shortcuts,
       queue: els.scQueue.value || defaultShortcuts.queue,
       clearQueue: els.scClearQueue.value || defaultShortcuts.clearQueue,
       copyPrompt: els.scCopyPrompt.value || defaultShortcuts.copyPrompt,
-      applyTool: els.scApplyTool.value || defaultShortcuts.applyTool,
       saveNote: els.scSaveNote.value || defaultShortcuts.saveNote,
       loadNote: els.scLoadNote.value || defaultShortcuts.loadNote,
       exportJson: els.scExportJson.value || defaultShortcuts.exportJson,
@@ -523,7 +520,6 @@ document.addEventListener('DOMContentLoaded', () => {
     els.scQueue.value = shortcuts.queue;
     els.scClearQueue.value = shortcuts.clearQueue;
     els.scCopyPrompt.value = shortcuts.copyPrompt;
-    els.scApplyTool.value = shortcuts.applyTool;
     els.scSaveNote.value = shortcuts.saveNote;
     els.scLoadNote.value = shortcuts.loadNote;
     els.scExportJson.value = shortcuts.exportJson;
@@ -589,8 +585,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const bgText = bg.status || 'serviço em segundo plano ocioso';
       sendToActiveTab({ action: 'status' }, (ct) => {
         const ctText = ct?.status ? `${ct.status} - queue: ${ct.queueLength}` : 'script de conteúdo ocioso';
-        const toolText = ct?.active ? ` - tool: ${ct.active}` : '';
-        els.serviceStatus.textContent = `${bgText} | ${ctText}${toolText}`;
+        const modeText = ' - modo teclado';
+        els.serviceStatus.textContent = `${bgText} | ${ctText}${modeText}`;
       });
     });
   };
