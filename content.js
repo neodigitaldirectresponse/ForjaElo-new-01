@@ -40,7 +40,6 @@ let autoCopyAfterAutomation = false;
 let selectedTool = null; // currently applied tool name
 let selectionModel = 'keyboard';
 let operationMode = 'cli';
-let typingMode = 'templateFast';
 let shortcuts = {
   queue: 'Ctrl+Enter',
   select: 'Ctrl+Shift+S',
@@ -62,6 +61,17 @@ const TOOL_DELAY_MAX = 10000; // 10 seconds
 function randomDelay(min, max) {
   const ms = Math.floor(Math.random() * (max - min + 1)) + min;
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function simulateKey(target, key, opts = {}) {
+  const eventOpts = { key, bubbles: true, cancelable: true, ...opts };
+  ['keydown', 'keypress', 'keyup'].forEach((type) => {
+    target.dispatchEvent(new KeyboardEvent(type, eventOpts));
+  });
 }
 
 
@@ -109,6 +119,23 @@ function splitMessages(text) {
     .split('~')
     .map((m) => m.trim())
     .filter(Boolean);
+}
+
+function setPromptText(divEl, text) {
+  const hiddenTA = document.querySelector("textarea[style*='display:none']") || document.querySelector('textarea');
+  if (hiddenTA) {
+    hiddenTA.value = text;
+    hiddenTA.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
+  }
+  if (!divEl) return;
+  divEl.focus();
+  divEl.innerHTML = '';
+  const lines = text.split('\n');
+  lines.forEach((line, idx) => {
+    if (idx > 0) divEl.appendChild(document.createElement('br'));
+    if (line) divEl.appendChild(document.createTextNode(line));
+  });
+  divEl.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
 }
 
 function queuePromptsFromResponse(text) {
@@ -238,7 +265,6 @@ if (!conversationKey) {
 let customClicks = [];
 let selectionMode = false;
 let highlightBox = null;
-let humanSamples = [];
 let lastKeyTimestamp = null;
 chrome.storage.local.get({ customClicks: [] }, (data) => {
   customClicks = data.customClicks || [];
@@ -252,9 +278,6 @@ chrome.storage.local.get({ selectionModel: 'keyboard' }, (data) => {
 chrome.storage.local.get({ operationMode: 'cli' }, (data) => {
   operationMode = data.operationMode;
 });
-chrome.storage.local.get({ typingMode: 'templateFast' }, (data) => {
-  typingMode = data.typingMode;
-});
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && changes.shortcuts) {
     shortcuts = { ...shortcuts, ...(changes.shortcuts.newValue || {}) };
@@ -264,9 +287,6 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
   if (area === 'local' && changes.operationMode) {
     operationMode = changes.operationMode.newValue;
-  }
-  if (area === 'local' && changes.typingMode) {
-    typingMode = changes.typingMode.newValue;
   }
 });
 
@@ -409,59 +429,8 @@ async function attemptToSendMessage(message) {
 
     if (!loading && inputDiv) {
       console.log("Setting message in input div");
-      const hiddenTA = getHiddenTextarea();
-      console.log("[QUEUE DEBUG] Hidden textarea present:", !!hiddenTA);
-      console.log("[QUEUE DEBUG] Original message length:", message.length);
+      setPromptText(inputDiv, message);
 
-      if (typingMode === 'simulate') {
-        await typeTextSlowly(inputDiv, message);
-      } else if (typingMode === 'hybrid') {
-        await typeTextHybrid(inputDiv, message);
-      } else if (typingMode === 'robust') {
-        await typeTextRobust(inputDiv, message);
-      } else if (typingMode === 'imitador') {
-        await typeTextImitador(inputDiv, message, humanSamples);
-      } else if (typingMode === 'rewrite') {
-        await typeTextRewrite(inputDiv, message);
-      } else if (typingMode === 'rewriteRandom') {
-        await typeTextRewriteRandom(inputDiv, message);
-      } else if (typingMode === 'templateFast') {
-        await typeTextTemplate(inputDiv, message, {
-          delay: 50,
-          errorRate: 0.02,
-          pause: 500,
-          jitter: 60,
-          mistakes: 1,
-          rewrites: 0,
-          rewriteEnd: 0,
-          rewriteRand: 5,
-        });
-      } else if (typingMode === 'templateSlow') {
-        await typeTextTemplate(inputDiv, message, {
-          delay: 150,
-          errorRate: 0.05,
-          pause: 1500,
-          jitter: 120,
-          mistakes: 3,
-          rewrites: 0,
-          rewriteEnd: 2,
-          rewriteRand: 15,
-        });
-      } else {
-        if (hiddenTA) {
-          console.log("[QUEUE DEBUG] hiddenTA value BEFORE:", JSON.stringify(hiddenTA.value));
-          hiddenTA.value = message;
-          console.log("[QUEUE DEBUG] hiddenTA value AFTER:", JSON.stringify(hiddenTA.value));
-          hiddenTA.dispatchEvent(new InputEvent("input", { bubbles: true, cancelable: true }));
-          setProseMirrorContent(inputDiv, message);
-          console.log("[QUEUE DEBUG] Visible div after setProseMirrorContent – innerText:", JSON.stringify(inputDiv.innerText));
-          console.log("[QUEUE DEBUG] Visible div after setProseMirrorContent – innerHTML:", inputDiv.innerHTML);
-        } else {
-          setProseMirrorContent(inputDiv, message);
-          console.log("[QUEUE DEBUG] Fallback div update – innerText:", JSON.stringify(inputDiv.innerText));
-        }
-      }
-      
       // add 100ms delay
       await new Promise((resolve) => setTimeout(resolve, 100));
       
@@ -495,11 +464,7 @@ async function attemptToSendMessage(message) {
           console.log("Botão Enviar encontrado, clicando", button);
 
         // Clear editor content so the queue can proceed to next item
-        if (hiddenTA) {
-          hiddenTA.value = "";
-        }
-        // Replace visible content with an empty paragraph so ProseMirror is truly empty
-        setProseMirrorContent(inputDiv, "");
+        setPromptText(inputDiv, "");
 
         return true;
       } else {
@@ -647,8 +612,6 @@ function handleKeyDown(event) {
   if (event.key.length === 1 || event.key === "Backspace" || event.key === " ") {
     const now = performance.now();
     if (lastKeyTimestamp !== null) {
-      humanSamples.push(now - lastKeyTimestamp);
-      if (humanSamples.length > 50) humanSamples.shift();
     }
     lastKeyTimestamp = now;
   }

@@ -20,15 +20,7 @@ Este repositório agora inclui uma versão mínima offline da extensão. A compi
 - Pressione "/" para focar rapidamente o menu de ferramentas, escolha a opção com as setas e ela será aplicada automaticamente.
 - Defina alvos de clique personalizados na página usando a seção **Cliques Personalizados**.
 - Personalize atalhos de teclado diretamente no popup e restaure-os com **Restaurar Padrões**.
-- Escolha o modo de digitação (Instantâneo, Simular, Híbrido, Robusta, Reescrever, Reescrever Aleatório ou Imitador) conforme sua necessidade.
-- O modo padrão agora é **Template Rápido**, basta colar o texto e iniciar a automação.
 - O atalho **Aplicar e Automatizar** cola o texto da área de transferência, inicia a automação e copia o resultado automaticamente.
-- A simulação de teclas agora suporta corretamente letras maiúsculas, números e caracteres especiais.
-- A digitação simulada foi aperfeiçoada para incluir pausas apenas ao final das palavras e pequenos erros aleatórios, oferecendo uma experiência mais humanizada.
-- Ao corrigir um caractere errado, o simulador remove todas as letras digitadas após o erro, apaga o caractere incorreto e redigita o trecho corretamente.
-- Quebras de linha são inseridas com **Shift + Enter**, evitando o envio acidental de mensagens durante a digitação automatizada.
-- A nova detecção de anomalias ajusta médias e desvios automaticamente caso os intervalos digitados saiam muito do padrão.
-- O modo **Imitador** permite que o simulador aprenda o ritmo de digitação de um trecho real e replique esse estilo para os prompts em fila.
 
 ## Instalação
 
@@ -48,12 +40,6 @@ Por padrão a extensão opera em **modo CLI**, destinado a automação via AdsPo
 Caso queira acessar rapidamente o ChatGPT, abra o arquivo `redirect.html` incluído neste repositório. Ele redireciona automaticamente para `https://chatgpt.com/` sem exibir mensagens adicionais.
 
 ## Recursos Avançados
-
-### Simulação Avançada de Digitação
-Consulte `docs/simulacao-avancada.md` para ideias de coleta de dados, aprendizado contínuo e validação estatística.
-
-### Formulário Apagar/Reescrever
-Para experimentar o modo Apagar/Reescrever utilize `simulation/teste-simulacao.html`. Essa página permite colar ou digitar o texto desejado, ajustar velocidade, erros, pausas e o contador **Reescrever Aleatório**, visualizando o resultado final em tempo real.
 
 ### Mensagens em Fila
 
@@ -184,10 +170,6 @@ Abaixo está uma visão geral dos arquivos incluídos neste repositório. A exte
 │   Lógica da interface do popup.
 ├── prompts.js
 │   Definições de prompts padrão usadas pelo popup.
-├── docs/
-│   Documentação adicional como `simulacao-avancada.md`.
-├── simulation/
-│   Ferramentas de simulação de digitação e página de testes.
 └── test/
     Scripts de teste utilizados durante o desenvolvimento.
 ```
