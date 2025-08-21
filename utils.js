@@ -26,11 +26,6 @@
   }
 
   const toolKeywords = {
-    'Criar imagem': ['criar', 'imagem'],
-    'Pensar por mais tempo': ['pensar', 'por', 'mais', 'tempo'],
-    'Investigar': ['investigar'],
-    'Busca na Web': ['busca', 'na', 'web'],
-    'Lousa': ['lousa'],
     'ForjaElo · SSA (Organizador)': ['forjaelo', 'ssa'],
     'ForjaElo · Scorecard (CSV)': ['forjaelo', 'scorecard'],
     'ForjaElo · Devocional 15min': ['forjaelo', 'devocional', '15'],

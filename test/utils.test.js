@@ -12,8 +12,6 @@ const utils = require('../utils');
   assert.deepStrictEqual(utils.splitMessages('a ~ b ~~ c '), ['a', 'b', 'c']);
 
   // detectTool
-  assert.strictEqual(utils.detectTool('Criar imagem para teste'), 'Criar imagem');
-  assert.strictEqual(utils.detectTool('Investigar   situação'), 'Investigar');
   assert.strictEqual(utils.detectTool('ForjaElo scorecard em csv agora'), 'ForjaElo · Scorecard (CSV)');
   assert.strictEqual(utils.detectTool('texto sem ferramenta'), '');
 

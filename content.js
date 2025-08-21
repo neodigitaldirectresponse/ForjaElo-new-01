@@ -43,10 +43,6 @@ let shortcuts = {
   queue: 'Ctrl+Enter',
   select: 'Ctrl+Shift+S',
   run: 'Ctrl+Shift+R',
-  toolImage: 'Ctrl+Shift+1',
-  toolInvestigate: 'Ctrl+Shift+3',
-  toolSearch: 'Ctrl+Shift+4',
-  toolWhiteboard: 'Ctrl+Shift+5',
   pasteStart: 'Ctrl+Shift+V',
   pasteStartAutomation: 'Ctrl+Shift+H',
   startAutomation: 'Ctrl+Shift+G',
@@ -142,11 +138,6 @@ function queuePromptsFromResponse(text) {
 }
 
 const toolKeywords = {
-  'Criar imagem': ['criar', 'imagem'],
-  'Pensar por mais tempo': ['pensar', 'por', 'mais', 'tempo'],
-  'Investigar': ['investigar'],
-  'Busca na Web': ['busca', 'na', 'web'],
-  'Lousa': ['lousa'],
   'ForjaElo · SSA (Organizador)': ['forjaelo', 'ssa'],
   'ForjaElo · Scorecard (CSV)': ['forjaelo', 'scorecard'],
   'ForjaElo · Devocional 15min': ['forjaelo', 'devocional', '15'],
@@ -1326,22 +1317,6 @@ function handleShortcut(e) {
     e.preventDefault();
     showShortcutInfo(`Atalho ${combo}`);
     runCustomClicks();
-  } else if (combo === shortcuts.toolImage) {
-    e.preventDefault();
-    showShortcutInfo(`Atalho ${combo}`);
-    selectTool('Criar imagem');
-  } else if (combo === shortcuts.toolInvestigate) {
-    e.preventDefault();
-    showShortcutInfo(`Atalho ${combo}`);
-    selectTool('Investigar');
-  } else if (combo === shortcuts.toolSearch) {
-    e.preventDefault();
-    showShortcutInfo(`Atalho ${combo}`);
-    selectTool('Busca na Web');
-  } else if (combo === shortcuts.toolWhiteboard) {
-    e.preventDefault();
-    showShortcutInfo(`Atalho ${combo}`);
-    selectTool('Lousa');
   } else if (combo === shortcuts.pasteStart) {
     e.preventDefault();
     showShortcutInfo(`Atalho ${combo}`);
