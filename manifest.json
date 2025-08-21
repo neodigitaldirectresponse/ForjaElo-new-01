@@ -1,14 +1,18 @@
 {
   "manifest_version": 3,
-  "name": "SSA - SERVO SEM ALMA",
-  "version": "8.7",
-  "description": "Cópia local do SSA - SERVO SEM ALMA sem chamadas de API",
+  "name": "ForjaElo · Fila SSA (Executor Cego) PRO+ Aplicar",
+  "version": "8.7.3",
+  "description": "Fila de prompts (~) com gerador de trilhas ForjaElo 6.7 e enfileiramento robusto (pausar, retomar, cancelar, retries, detecção de envio). | Inclui 'Aplicar Agora' com defaults para todas as trilhas (A–N) e 'Gerar Tudo'.",
   "action": {
-    "default_icon": "icon-34.png",
+    "default_icon": {
+      "16": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACIAAAAiCAYAAAA6RwvCAAABI0lEQVR4nGMUkZD5zzAIANNAOwAGWEhRnJJVQLIFc6ZNIEodIzFRQ44D0AEhB+F1CLoDiPUdOWbgdAiyAeQ4gFTzsCZWajsC3RxsUY3hEFo4ghjH4My+1HYEIXNRHAJzJa0cge4Y5FAZNAUa3CH0Cg0YQA+VQRMiBIt4GZ+5DNxytljlXhyoZvh4bTVJ6sh2CAz8/fGB4c48M6qpQweDJmoGjUOIjhpmDgEG9axbKGL3Fjsy/P78lCx1ZDtkNI3QGwwah5DUZiUGYEus787PYnh9vIcyhzzZkkyUA4hVhwvAowZb1UxLgF7JDpo0guIQeoUKtiYHzhChlWNwmYvhEEKtbWo5Ar0BhjVEaOEYQr2Dwd/Tw2cYOYCivi86GPDRAHoAAG/Rkx5Dt0EuAAAAAElFTkSuQmCC",
+      "32": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACIAAAAiCAYAAAA6RwvCAAABI0lEQVR4nGMUkZD5zzAIANNAOwAGWEhRnJJVQLIFc6ZNIEodIzFRQ44D0AEhB+F1CLoDiPUdOWbgdAiyAeQ4gFTzsCZWajsC3RxsUY3hEFo4ghjH4My+1HYEIXNRHAJzJa0cge4Y5FAZNAUa3CH0Cg0YQA+VQRMiBIt4GZ+5DNxytljlXhyoZvh4bTVJ6sh2CAz8/fGB4c48M6qpQweDJmoGjUOIjhpmDgEG9axbKGL3Fjsy/P78lCx1ZDtkNI3QGwwah5DUZiUGYEus787PYnh9vIcyhzzZkkyUA4hVhwvAowZb1UxLgF7JDpo0guIQeoUKtiYHzhChlWNwmYvhEEKtbWo5Ar0BhjVEaOEYQr2Dwd/Tw2cYOYCivi86GPDRAHoAAG/Rkx5Dt0EuAAAAAElFTkSuQmCC"
+    },
     "default_popup": "popup.html"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "content_scripts": [
     {
@@ -24,36 +28,23 @@
       "run_at": "document_idle"
     }
   ],
-  "permissions": ["activeTab", "storage", "tabs", "notifications", "clipboardRead", "clipboardWrite"],
-  "host_permissions": ["http://*/*", "https://*/*"],
-  "icons": {
-    "128": "icon-128.png"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "icon-128.png",
-        "icon-34.png"
-      ],
-      "matches": ["<all_urls>"]
-    }
+  "permissions": [
+    "activeTab",
+    "storage",
+    "tabs",
+    "notifications",
+    "clipboardRead",
+    "clipboardWrite",
+    "scripting"
   ],
-  "commands": {
-    "open-chatgpt": {
-      "suggested_key": { "default": "Ctrl+Shift+1" },
-      "description": "Abrir ChatGPT via redirect"
-    },
-    "apply-tool": {
-      "suggested_key": { "default": "Ctrl+Shift+2" },
-      "description": "Colar texto, iniciar automação e copiar resultado"
-    },
-    "paste-automation": {
-      "suggested_key": { "default": "Ctrl+Shift+3" },
-      "description": "Colar texto e iniciar automação"
-    },
-    "copy-json-result": {
-      "suggested_key": { "default": "Ctrl+Shift+4" },
-      "description": "Copiar JSON do resultado"
-    }
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "icons": {
+    "16": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACIAAAAiCAYAAAA6RwvCAAABI0lEQVR4nGMUkZD5zzAIANNAOwAGWEhRnJJVQLIFc6ZNIEodIzFRQ44D0AEhB+F1CLoDiPUdOWbgdAiyAeQ4gFTzsCZWajsC3RxsUY3hEFo4ghjH4My+1HYEIXNRHAJzJa0cge4Y5FAZNAUa3CH0Cg0YQA+VQRMiBIt4GZ+5DNxytljlXhyoZvh4bTVJ6sh2CAz8/fGB4c48M6qpQweDJmoGjUOIjhpmDgEG9axbKGL3Fjsy/P78lCx1ZDtkNI3QGwwah5DUZiUGYEus787PYnh9vIcyhzzZkkyUA4hVhwvAowZb1UxLgF7JDpo0guIQeoUKtiYHzhChlWNwmYvhEEKtbWo5Ar0BhjVEaOEYQr2Dwd/Tw2cYOYCivi86GPDRAHoAAG/Rkx5Dt0EuAAAAAElFTkSuQmCC",
+    "32": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACIAAAAiCAYAAAA6RwvCAAABI0lEQVR4nGMUkZD5zzAIANNAOwAGWEhRnJJVQLIFc6ZNIEodIzFRQ44D0AEhB+F1CLoDiPUdOWbgdAiyAeQ4gFTzsCZWajsC3RxsUY3hEFo4ghjH4My+1HYEIXNRHAJzJa0cge4Y5FAZNAUa3CH0Cg0YQA+VQRMiBIt4GZ+5DNxytljlXhyoZvh4bTVJ6sh2CAz8/fGB4c48M6qpQweDJmoGjUOIjhpmDgEG9axbKGL3Fjsy/P78lCx1ZDtkNI3QGwwah5DUZiUGYEus787PYnh9vIcyhzzZkkyUA4hVhwvAowZb1UxLgF7JDpo0guIQeoUKtiYHzhChlWNwmYvhEEKtbWo5Ar0BhjVEaOEYQr2Dwd/Tw2cYOYCivi86GPDRAHoAAG/Rkx5Dt0EuAAAAAElFTkSuQmCC",
+    "64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABn0lEQVR4nO2bv04CQRCHB2JvY0HBC/gE1CaUtrwBlZU9lYW9lRWx4w3oSXgGSkNBKLBSCxMTY6Raciz75zZ364+dma8jHMtvPmbvLuSmc9Xr/5FguugAaC5SDh7f3WeK0T7T56dax3XqbIGSCreJiQgKsAuva/UcqJvdK6C6QEmF28TqcJ4EuRRPdJzftZVPBHAq3hCS4L0Mcine4KvnSICxw614g6mr2gXib4QOArj/+ga7C7QD0AHQqAB0ADQqAB0AjQpAB0CjAtAB0KgAdAA04gUk/S3uonfzSJfXo6TPfKxm9LZ8yLJOKuI7QLyAxlvAxXY+pq/N8mzWCSG+A1QAOgCaLOeA/u00+P7ry4B+v9//bZ0Q4jtAvAC9DGZdvQBUADoAGhWADoAmy1WgLWI3Qj+fG1rPho2+Q3wHiBfQeAvsFhPaLSaNg7S1TiriO0AFoAOgUQHoAGhUADoAGhWADoDmIMD1IDFH7EeCtQOqL7h3geuBcG8HcJPgq+dEQGzGpkRCY0DODuAkITYDpXODOjmaMD1ekohWZ4c5swcjrJZmz5EzogAAAABJRU5ErkJggg==",
+    "128": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAACjklEQVR4nO3dwUobURSA4RMp7VKQLFwIxUXrw/gIdplVFuKjuMoqD+Cyy5a+gW+gIihCloIUCnZjVxPGxJncTBNn5v7/t07GC+fPiZMIDob7By8hrJ22D6B2fVjnwaPx2ZaOoU2bTs6THjdIeQtw8P21KoTaABYHn1qV2pc6u8oAyhdw8P21ao5v/hLo8PNRnt9bb+VLATj8/NRFUHkb6PDzUjXPVwEUdTj8PBVzLW8BPwiCmwfgq59hcQu4AeAMAM4A4AwAzgDgDADOAOAMAM4A4AwAzgDgDADOAOAMAM4A4AwAzgDgDADOAOAMAM4A4AwAzgDgDADOAOAMAM4A4AwAzgDgDADOAOAMAM4A4AwAzgDgDADOAOAMAG6t/xewDR93P8fhya93+Vl/Zpfx8P1br86zbW4AOAOAMwA4A4AzADgDgGv9NjDV8+NN3F0ct32Mua6dpyk3AJwBwBkAnAHAGQCcAcAZAFxvPgf4tPcljsbXjZ+/6a9eu3aeptwAcAYAZwBwBgBnAHAGANeb28Cuff3atfM05QaAMwA4A4AzADgDgDMAOAOAMwA4A4DrzSeBXfO/fxBSmP08jd+3PzZwombcAHAGAGcAcAYAZwBwBgDX+m3g36f7uJp8bfsYc107z7a5AeAMAM4A4AwAzgDgDADOAOAMAM4A4AwAzgDgDADOAOAMAM4A4AwAzgDgDADOAOAMAM4A4AwAzgDgDADOAOAMAM4A4AwAzgDgDADOAOAMAM4A4AwAbh7AdHIeERGj8VlLR9F7KOZbzNsNAPcqALdA3hZf/RE1G8AI8lI1z6UAynUYQR7KcyzPN6JiAxhBPuqGHxExGO4fvKQ8ueoC6qbU2dUGUHUx9ceqF21SAAVD6I/Ubb1WAMrPP7UsmQ/UfI7aAAAAAElFTkSuQmCC"
   }
 }
