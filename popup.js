@@ -1,610 +1,822 @@
-document.addEventListener('DOMContentLoaded', () => {
-  // --- Helpers ----------------------------------------------------------------
-  const $id = (id) => document.getElementById(id);
+// popup.js — PRO
+const $ = (q) => document.querySelector(q);
+const $$ = (q) => Array.from(document.querySelectorAll(q));
 
-  // Track pending operations to show/hide the loading overlay reliably
-  const overlay = $id('loadingOverlay');
-  let loadingCounter = 0;
+// ---- Trilhas A–N (mesmo conteúdo funcional do pacote anterior) ----
+// popup.js — ForjaElo 6.7 · SSA 8.7
+// Salva/recupera estado, gera filas com "~" e dispara para content.js
 
-  const showLoading = () => {
-    loadingCounter++;
-    overlay && overlay.classList.add('is-active');
-  };
+const $ = (q) => document.querySelector(q);
+const $$ = (q) => Array.from(document.querySelectorAll(q));
 
-  const hideLoading = () => {
-    loadingCounter = Math.max(0, loadingCounter - 1);
-    if (loadingCounter === 0 && overlay) overlay.classList.remove('is-active');
-  };
+// === Templates das Trilhas (A–N) ===
+// Cada trilha tem: id, nome, fields (campos "Base:") e um builder que retorna array de prompts
+const TRILHAS = [
+  {
+    id: "A",
+    nome: "A) Dia Completo (abrange todos os elos)",
+    fields: [
+      {key:"agenda", label:"Agenda do dia + contexto"},
+      {key:"prioridades", label:"Prioridades (Topo)"},
+      {key:"ruidos", label:"Fontes de distração"},
+      {key:"tarefas_criticas", label:"Tarefas críticas (T2)"},
+      {key:"preferencias", label:"Preferências/Condições (Box)"},
+      {key:"ambiente", label:"Ambiente (Refúgio/ritual)"},
+      {key:"escopo", label:"Escopo do principal"},
+      {key:"log", label:"Log rápido"},
+      {key:"resultados", label:"Resultados do dia"}
+    ],
+    build: (v) => [
+      `SSA, sintetize meu “porquê de hoje” (Chama 5) em 1 frase e liste 3 sinais visíveis de progresso. Base: ‹${v.agenda||""}›.`,
+      `SSA, gere meu Top-3 neutro: T1 Propósito (Chama), T2 Resultado (Talentos/Potência), T3 Elo do dia (calendário). Base: ‹${v.prioridades||""}›.`,
+      `SSA, defina limites (Central): padrão neutro, avisos de “limitar exposição”, janelas de e-mail/mensagens e no-go list. Base: ‹${v.ruidos||""}›.`,
+      `SSA, formate um checklist Potência (5–7 itens) com timers (25/5) para executar o T2; inclua checkpoints, travas e critério de “pronto”. Base: ‹${v.tarefas_criticas||""}›.`,
+      `SSA, proponha 1 microtreino Box (≤10 min) para energia mental/física antes do bloco principal; inclua como medir (0–5). Base: ‹${v.preferencias||""}›.`,
+      `SSA, crie Elo do Refúgio: ritual de 3–5 min (desligar, respirar, anotar 1 insight) com gatilho e horário. Base: ‹${v.ambiente||""}›.`,
+      `SSA, desenhe Sprint10 (10 passos curtos) para fechar o principal do dia até as 20:00, com timers e travas objetivas. Base: ‹${v.escopo||""}›.`,
+      `SSA, registre métrica leve do dia: esforço/energia/atrito/progresso (0–5) + 3 aprendizados. Base: ‹${v.log||""}›.`,
+      `SSA, faça revisão EOD em 6 bullets (feito/pendente/atrito/aprendizados/agradecer/próximo foco) e gere o Top-3 neutro de amanhã. Base: ‹${v.resultados||""}›.`
+    ]
+  },
+  {
+    id: "B",
+    nome: "B) Projeto (zero → envio)",
+    fields: [
+      {key:"briefing", label:"Briefing/Projeto"},
+      {key:"escopo", label:"Escopo"},
+      {key:"pipeline", label:"Pipeline/Processos"},
+      {key:"stakeholders", label:"Stakeholders/decisão"},
+      {key:"preferencias", label:"Preferências (Box)"},
+      {key:"parcerias", label:"Parcerias/Leads (Ide)"},
+      {key:"agenda", label:"Agenda/Pausas"},
+      {key:"entrega", label:"Entrega-alvo (D1)"}
+    ],
+    build: (v) => [
+      `SSA, com base no texto abaixo, crie: (1) objetivo em 1 frase; (2) 3 passos mínimos; (3) travas + Sprint10. Texto: ‹${v.briefing||""}›.`,
+      `SSA, descreva o resultado esperado (T2 Resultado) em 1 frase e 3 critérios de excelência (Talentos). Base: ‹${v.escopo||""}›.`,
+      `SSA, mapeie processos (Potência): checklist curto (5–7) com timers e checkpoints; inclua “pronto/feito”. Base: ‹${v.pipeline||""}›.`,
+      `SSA, defina limites (Central) específicos do projeto: canais, horários, pontos de decisão; inclua aviso padrão de “limitar exposição”. Base: ‹${v.stakeholders||""}›.`,
+      `SSA, proponha microtreino Box (≤10 min) para iniciar os blocos e reduzir atrito. Base: ‹${v.preferencias||""}›.`,
+      `SSA, gere 2 roteiros Ide sem dados sensíveis: (a) convite frio de 3 linhas; (b) follow-up curto com CTA. Base: ‹${v.parcerias||""}›.`,
+      `SSA, crie Elo do Refúgio para pausas estratégicas (3–5 min, passos claros). Base: ‹${v.agenda||""}›.`,
+      `SSA, desenhe Sprint10 para o primeiro envio (D1) com estimativas rápidas, travas e “corte seguro”. Base: ‹${v.entrega||""}›.`
+    ]
+  },
+  {
+    id: "C",
+    nome: "C) Semana Completa",
+    fields: [
+      {key:"metas", label:"Metas/resultados-chave"},
+      {key:"calendario", label:"Calendário da semana"},
+      {key:"rotina", label:"Rotina/Contexto profundo"},
+      {key:"tipo_trabalho", label:"Tipo de trabalho (QA/empacote)"},
+      {key:"preferencias", label:"Preferências Box"},
+      {key:"leads", label:"Leads/Lista (Ide)"},
+      {key:"energia", label:"Energia/Descanso"},
+      {key:"backlog", label:"Backlog"},
+      {key:"registros", label:"Registros para retro"}
+    ],
+    build: (v) => [
+      `SSA, consolide meu Propósito da semana (Chama) em 1 frase e 3 resultados-chave observáveis. Base: ‹${v.metas||""}›.`,
+      `SSA, gere um Roadmap Potência (processos + timers) para 5 dias: blocos focais/delivery/revisão. Base: ‹${v.calendario||""}›.`,
+      `SSA, estabeleça padrões Central: janelas de comunicação, regras de contexto profundo, e checklist “entrar/sair de foco”. Base: ‹${v.rotina||""}›.`,
+      `SSA, defina critérios Talentos (excelência/QA) e template de empacotamento de entregas. Base: ‹${v.tipo_trabalho||""}›.`,
+      `SSA, agende microtreinos Box (≤10 min) distribuídos na semana (força, mobilidade, respiração). Base: ‹${v.preferencias||""}›.`,
+      `SSA, crie 3 roteiros Ide (contato inicial, nurture curto, fechamento com CTA) sem dados sensíveis. Base: ‹${v.leads||""}›.`,
+      `SSA, janelas Refúgio (descanso/detox): horários, rituais e limites práticos. Base: ‹${v.energia||""}›.`,
+      `SSA, Sprint10 semanal: 10 passos de execução com checkpoints por dia. Base: ‹${v.backlog||""}›.`,
+      `SSA, retro semanal em 8 bullets (ganhos, perdas, atritos, riscos, oportunidades, aprendizados, descarte, foco seguinte). Base: ‹${v.registros||""}›.`
+    ]
+  },
+  {
+    id: "D",
+    nome: "D) Funil de Parcerias (Ide + Resultado)",
+    fields: [
+      {key:"produto", label:"Produto/serviço (proposta de valor)"},
+      {key:"perfil", label:"Perfil do contato"},
+      {key:"meta_contatos", label:"Meta de contatos"},
+      {key:"etica", label:"Ética/limites"}
+    ],
+    build: (v) => [
+      `SSA, extraia proposta de valor em 1 frase e 3 provas de credibilidade. Base: ‹${v.produto||""}›.`,
+      `SSA, crie 3 roteiros Ide sem dados sensíveis: DM curta, e-mail de 4 linhas e mensagem de follow-up (72h) — cada um com CTA. Base: ‹${v.perfil||""}›.`,
+      `SSA, monte checklist Potência (5–7) com timers para disparo, registro, qualificação e revisão diária do funil (T2 Resultado). Base: ‹${v.meta_contatos||""}›.`,
+      `SSA, defina travas Central: limites por dia, horário de outreach e regras de não-insistência. Base: ‹${v.etica||""}›.`,
+      `SSA, Sprint10 para “primeiros 10 contatos” com checkpoints objetivos e “stop-loss” de tempo. Base: ‹${v.meta_contatos||""}›.`
+    ]
+  },
+  {
+    id: "E",
+    nome: "E) Qualidade & Excelência (Talentos)",
+    fields: [
+      {key:"entrega", label:"Entrega"},
+      {key:"workflow", label:"Workflow/QA"},
+      {key:"prazos", label:"Prazos"}
+    ],
+    build: (v) => [
+      `SSA, descreva “o que é excelente” em 1 frase e defina 3 critérios mensuráveis de QA. Base: ‹${v.entrega||""}›.`,
+      `SSA, gere checklist Potência de QA (5–7) com timers por etapa (rascunho → revisão → empacote → envio). Base: ‹${v.workflow||""}›.`,
+      `SSA, inclua travas para não-perfeccionismo (Central): limite de revisões e gatilho de envio. Base: ‹${v.prazos||""}›.`,
+      `SSA, Sprint10 de empacotamento (10 passos curtos) para fechar hoje. Base: ‹${v.entrega||""}›.`
+    ]
+  },
+  {
+    id: "F",
+    nome: "F) Foco Profundo (proteção + execução)",
+    fields: [
+      {key:"tarefa", label:"Tarefa / Bloco principal"},
+      {key:"setup", label:"Setup de foco (ambiente/notifs)"},
+      {key:"subtarefas", label:"Subtarefas"},
+      {key:"preferencias", label:"Preferências Box"},
+      {key:"observacoes", label:"Observações"}
+    ],
+    build: (v) => [
+      `SSA, resuma o propósito do bloco em 1 frase e derive 3 micro-metas não negociáveis. Base: ‹${v.tarefa||""}›.`,
+      `SSA, defina protocolo Central “entrar em foco”: ambiente, notificações, lista de corte e tempo total. Base: ‹${v.setup||""}›.`,
+      `SSA, checklist Potência com timers (25/5) para as 3 micro-metas e checkpoint de meio do bloco. Base: ‹${v.subtarefas||""}›.`,
+      `SSA, microtreino Box de 5–8 min (respiração + mobilidade) para antes/depois. Base: ‹${v.preferencias||""}›.`,
+      `SSA, mini-retro (EOB): feito, atrito, uma melhoria. Base: ‹${v.observacoes||""}›.`
+    ]
+  },
+  {
+    id: "G",
+    nome: "G) Energia & Antifragilidade (Box + Refúgio)",
+    fields: [
+      {key:"condicao", label:"Condição do dia (0–5)"},
+      {key:"ambiente", label:"Ambiente (gatilhos)"},
+      {key:"rotina", label:"Rotina (retorno ao foco)"},
+      {key:"top3", label:"Top‑3 do dia"}
+    ],
+    build: (v) => [
+      `SSA, avalie energia (0–5) e proponha 2 microtreinos Box (≤10 min): um de ativação e um de recuperação. Base: ‹${v.condicao||""}›.`,
+      `SSA, crie Elo do Refúgio (3–5 min) com passos claros e gatilho contextual. Base: ‹${v.ambiente||""}›.`,
+      `SSA, defina “zona segura” Central para pausas: duração, frequência e regras de retorno ao foco. Base: ‹${v.rotina||""}›.`,
+      `SSA, checklist Potência para integrar treino/pausas sem quebrar o T2 do dia. Base: ‹${v.top3||""}›.`
+    ]
+  },
+  {
+    id: "H",
+    nome: "H) Limites & Comunhão (Central)",
+    fields: [
+      {key:"ruidos", label:"Fontes de ruído/distração"},
+      {key:"relacoes", label:"Relacionamentos/Times"},
+      {key:"governanca", label:"Governança/Decisão"}
+    ],
+    build: (v) => [
+      `SSA, mapeie ruídos e distrações e formule 5 avisos prontos de “limitar exposição” para diferentes contextos (reunião, chat, e-mail, família, social). Base: ‹${v.ruidos||""}›.`,
+      `SSA, desenhe um protocolo de “contexto neutro”: como pedir/ativar e quando encerrar. Base: ‹${v.relacoes||""}›.`,
+      `SSA, defina janelas de comunicação e escadas de decisão (quem decide o quê e quando). Base: ‹${v.governanca||""}›.`
+    ]
+  },
+  {
+    id: "I",
+    nome: "I) Finanças & Resultado (Talentos)",
+    fields: [
+      {key:"negocio", label:"Negócio (modelo simples)"},
+      {key:"planilha", label:"Planilha simples (descrição)"},
+      {key:"regras", label:"Regras/limites"}
+    ],
+    build: (v) => [
+      `SSA, derive 3 indicadores simples de resultado (receita, margem, tickets/semana) e metas de curto prazo. Base: ‹${v.negocio||""}›.`,
+      `SSA, crie checklist Potência (5–7) para registro financeiro básico diário (entradas/saídas/observações). Base: ‹${v.planilha||""}›.`,
+      `SSA, defina travas Central: tetos de gasto, aprovações e janela de revisão semanal. Base: ‹${v.regras||""}›.`
+    ]
+  },
+  {
+    id: "J",
+    nome: "J) Crise/Incêndio (corte seguro)",
+    fields: [
+      {key:"situacao", label:"Situação/Problema"},
+      {key:"agenda", label:"Agenda a pausar"},
+      {key:"recursos", label:"Recursos disponíveis"},
+      {key:"stakeholders", label:"Stakeholders"},
+      {key:"aprendizados", label:"Aprendizados"}
+    ],
+    build: (v) => [
+      `SSA, sintetize o problema em 1 frase e 3 consequências se nada for feito. Base: ‹${v.situacao||""}›.`,
+      `SSA, gere um “corte seguro” (Central): o que pausar/adiar e por quanto tempo. Base: ‹${v.agenda||""}›.`,
+      `SSA, Sprint10 emergencial: 10 passos curtos para estabilizar em 90–120 min, com timers e pontos de não-retorno. Base: ‹${v.recursos||""}›.`,
+      `SSA, plano de comunicação (Ide) em 3 bullets para partes interessadas (sem dados sensíveis). Base: ‹${v.stakeholders||""}›.`,
+      `SSA, lições rápidas (3 bullets) e critério para encerrar o modo crise. Base: ‹${v.aprendizados||""}›.`
+    ]
+  },
+  {
+    id: "K",
+    nome: "K) Revisão Diária & Arquivação",
+    fields: [
+      {key:"log", label:"Log do dia"},
+      {key:"prioridades", label:"Prioridades (amanhã)"},
+      {key:"preferencias", label:"Preferências de template (registros)"}
+    ],
+    build: (v) => [
+      `SSA, faça uma revisão em 6 bullets: feito/pendente/atrito/aprendizados/agradecer/próximo foco. Base: ‹${v.log||""}›.`,
+      `SSA, gere meu Top-3 neutro de amanhã: T1 Propósito (Chama), T2 Resultado (Talentos/Potência), T3 Elo do dia (calendário). Base: ‹${v.prioridades||""}›.`,
+      `SSA, crie um template de “Registros” (anotações fáceis) com campos: data, foco, decisões, riscos, métrica 0–5 e anexos. Base: ‹${v.preferencias||""}›.`
+    ]
+  },
+  {
+    id: "L",
+    nome: "L) Biblioteca de Mensagens (Ide)",
+    fields: [
+      {key:"perfil", label:"Perfil do contato"},
+      {key:"funil", label:"Funil/processo"}
+    ],
+    build: (v) => [
+      `SSA, gere 4 roteiros Ide sem dados sensíveis: (1) pedido de contexto, (2) convite para chamada de 15 min, (3) agradecimento + próximo passo, (4) follow-up curto pós-reunião; todos com 1 CTA claro. Base: ‹${v.perfil||""}›.`,
+      `SSA, checklist Potência para enviar e registrar respostas em até 30 min/dia, com timers e limites (Central). Base: ‹${v.funi||v.funil||""}›.`
+    ]
+  },
+  {
+    id: "M",
+    nome: "M) Aprendizado Contínuo",
+    fields: [
+      {key:"tema", label:"Tema de estudo"},
+      {key:"hipoteses", label:"Hipóteses/Experimentos"},
+      {key:"calendario", label:"Calendário/Proteção de blocos"}
+    ],
+    build: (v) => [
+      `SSA, crie um “Diário de Aprendizado” com campos: insight, onde usei, próximo experimento, escore 0–5. Base: ‹${v.tema||""}›.`,
+      `SSA, Sprint10 de experimentos (10 micro-testes) com estimativas rápidas e critério de descarte. Base: ‹${v.hipoteses||""}›.`,
+      `SSA, protocolo Central para encerrar experimentos e proteger blocos de entrega. Base: ‹${v.calendario||""}›.`
+    ]
+  },
+  {
+    id: "N",
+    nome: "N) Top‑3 Neutro (rápido)",
+    fields: [
+      {key:"agenda", label:"Agenda + prioridades"},
+      {key:"tarefas", label:"Tarefas (T2)"},
+      {key:"rotina", label:"Rotina/energia"}
+    ],
+    build: (v) => [
+      `SSA, gere meu Top-3 neutro: T1 Propósito (Chama), T2 Resultado (Talentos/Potência), T3 Elo do dia (calendário). Base: ‹${v.agenda||""}›.`,
+      `SSA, formate checklist Potência para o T2 com timers (25/5) e Sprint10 final de revisão. Base: ‹${v.tarefas||""}›.`,
+      `SSA, defina uma janela Refúgio (15–20 min) e 1 microtreino Box (≤10 min) para sustentar energia. Base: ‹${v.rotina||""}›.`
+    ]
+  }
+];
 
-  const storageGet = (keys, cb) => chrome.storage.local.get(keys, cb);
-  const storageSet = (obj, cb) => chrome.storage.local.set(obj, cb || (() => {}));
 
-  const sendToActiveTab = (message, callback) => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0] && tabs[0].id != null) {
-        chrome.tabs.sendMessage(tabs[0].id, message, (resp) => {
-          if (chrome.runtime.lastError) {
-            const msg = chrome.runtime.lastError.message || '';
-            if (msg.includes('Could not establish connection')) {
-              console.info('Conteudo nao ativo para receber mensagens');
-            } else if (msg.includes('The message port closed')) {
-              console.info('A aba recarregou ou fechou antes da resposta');
-            } else {
-              console.warn('sendMessage failed:', msg);
-            }
-          }
-          callback && callback(resp);
-        });
-      } else {
-        callback && callback();
-      }
+// ================== UI / ESTADO ==================
+let state = {
+  trilha: "A",
+  values: {},
+  settings: {
+    delay:2, jitterMin:0, jitterMax:0, mode:"auto",
+    strategy:"both", waitMode:"timeOnly", maxWait:120, retries:1
+  },
+  generated: ""
+};
+// Defaults prontos por trilha (sem precisar preencher Base:)
+const DEFAULTS = {
+  A: { agenda: "Dia padrão sem dados sensíveis; foco em 1 entrega principal.",
+       prioridades: "T1: propósito claro; T2: resultado mínimo viável; T3: compromisso do calendário.",
+       ruidos: "Desligar notificações e evitar atividades paralelas não essenciais.",
+       tarefas_criticas: "Fechar rascunho e revisar rapidamente antes de enviar.",
+       preferencias: "Box curto (respiração 4-7-8 + alongamento leve).",
+       ambiente: "Mesa limpa, abas essenciais, sem celular à vista.",
+       escopo: "Empacotar o essencial (sem perfumaria); definição de pronto objetiva.",
+       log: "Anotações breves durante o dia (3 bullets).",
+       resultados: "Registro de envio e aprendizados do dia." },
+  B: { briefing: "Projeto genérico (MVP com 3 partes). Evitar dados sensíveis.",
+       escopo: "Primeira versão funcional, sem polimento.",
+       pipeline: "Rascunho -> Revisão -> Empacote -> Envio.",
+       stakeholders: "Decisão rápida com quem executa; comunicar mudanças de escopo.",
+       preferencias: "Box antes do bloco principal, ≤10min.",
+       parcerias: "Mensagens curtas e educadas, sem dados sensíveis.",
+       agenda: "Pausas a cada 60–90min.",
+       entrega: "Primeiro envio (D1) hoje, com corte seguro." },
+  C: { metas: "Dois resultados visíveis ao fim da semana.",
+       calendario: "Blocos focais na manhã; reuniões à tarde.",
+       rotina: "Rituais de entrada/saída do foco; e-mail em janelas.",
+       tipo_trabalho: "QA objetivo: critérios mensuráveis.",
+       preferencias: "Mobilidade/respiração 10min/dia.",
+       leads: "Lista fria (sem dados sensíveis).",
+       energia: "Refúgio 20min/dia, detox de redes.",
+       backlog: "Top‑15 tarefas priorizadas.",
+       registros: "Ganhos, perdas, atritos e aprendizados." },
+  D: { produto: "Proposta de valor simples e verificável.",
+       perfil: "Contato padrão (profissional).",
+       meta_contatos: "Primeiros 10 contatos qualificados.",
+       etica: "Não insistir além de 2 follow-ups; respeitar horários." },
+  E: { entrega: "Entrega padrão com critérios de qualidade.",
+       workflow: "Rascunho -> Revisão -> Empacote -> Envio.",
+       prazos: "Fechar hoje com limite de revisões." },
+  F: { tarefa: "Bloco principal de foco profundo.",
+       setup: "Ambiente neutro, notificações off, tempo delimitado.",
+       subtarefas: "3 micro‑metas claras e verificáveis.",
+       preferencias: "Box 5–8min (respiração + mobilidade).",
+       observacoes: "Nota de atritos e melhorias." },
+  G: { condicao: "Energia moderada (3/5); ajustar carga.",
+       ambiente: "Gatilho de pausa curta (levantar/respirar).",
+       rotina: "Pausas programadas com retorno ao foco.",
+       top3: "Top‑3 do dia com T2 executável." },
+  H: { ruidos: "Reuniões não essenciais; chats ruidosos; notificações.",
+       relacoes: "Pedir contexto neutro quando necessário.",
+       governanca: "Escala de decisão simples por área." },
+  I: { negocio: "Modelo simples: receita, margem, tickets/semana.",
+       planilha: "Registro básico diário (entradas/saídas).",
+       regras: "Tetos de gasto e revisão semanal." },
+  J: { situacao: "Prazo crítico e/ou bug importante.",
+       agenda: "Pausar tarefas não essenciais.",
+       recursos: "Time mínimo e ferramentas essenciais.",
+       stakeholders: "Comunicação objetiva com partes interessadas.",
+       aprendizados: "Lições rápidas após estabilizar." },
+  K: { log: "Resumo do dia (feito/pendente/atrito).",
+       prioridades: "Três prioridades de amanhã.",
+       preferencias: "Template simples de registros." },
+  L: { perfil: "Contato profissional padrão.",
+       funil: "Enviar, registrar respostas em até 30min/dia." },
+  M: { tema: "Assunto de interesse atual.",
+       hipoteses: "Conjunto de micro‑experimentos.",
+       calendario: "Proteger blocos de entrega e de estudo." },
+  N: { agenda: "Agenda concisa do dia.",
+       tarefas: "Conjunto de tarefas do T2.",
+       rotina: "Janela de Refúgio e Box curto." }
+};
+
+function buildQueueFromDefaults(trilhaId){
+  const t = TRILHAS.find(x=>x.id===trilhaId);
+  if(!t) return "";
+  const vals = DEFAULTS[trilhaId] || {};
+  const arr = t.build(vals);
+  return arr.join("~");
+}
+function buildAllDefaults(){
+  const parts = [];
+  TRILHAS.forEach(t => {
+    const vals = DEFAULTS[t.id] || {};
+    parts.push(...t.build(vals));
+  });
+  return parts.join("~");
+}
+
+
+function saveState(){ chrome.storage.local.set({state}); }
+function loadState(){ chrome.storage.local.get("state", d => { if (d.state) state=d.state; initUI(); }); }
+
+function initUI(){
+  // select trilhas
+  const sel=$("#trilha");
+  sel.innerHTML = TRILHAS.map(t=>`<option value="${t.id}">${t.nome}</option>`).join("");
+  sel.value = state.trilha || "A";
+  sel.addEventListener("change", ()=>{ state.trilha = sel.value; renderFields(); saveState(); });
+
+  // delays & modes
+  $("#promptDelay").value = state.settings.delay;
+  $("#promptDelayMin").value = state.settings.jitterMin;
+  $("#promptDelayMax").value = state.settings.jitterMax;
+  $("#sendMode").value = state.settings.mode;
+  $("#sendStrategy").value = state.settings.strategy || "both";
+  $("#waitMode").value = state.settings.waitMode || "timeOnly";
+  $("#maxWait").value = state.settings.maxWait || 120;
+  $("#retries").value = state.settings.retries ?? 1;
+
+  ["promptDelay","promptDelayMin","promptDelayMax","sendMode","sendStrategy","waitMode","maxWait","retries"].forEach(id=>{
+    $("#"+id).addEventListener("input", ()=>{
+      state.settings.delay = Number($("#promptDelay").value||0);
+      state.settings.jitterMin = Number($("#promptDelayMin").value||0);
+      state.settings.jitterMax = Number($("#promptDelayMax").value||0);
+      state.settings.mode = $("#sendMode").value;
+      state.settings.strategy = $("#sendStrategy").value;
+      state.settings.waitMode = $("#waitMode").value;
+      state.settings.maxWait = Number($("#maxWait").value||120);
+      state.settings.retries = Number($("#retries").value||1);
+      saveState();
     });
-  };
-
-  const safeReadClipboard = async () => {
-    if (!navigator.clipboard) {
-      console.error('Clipboard API não disponível');
-      return '';
-    }
-    if (!document.hasFocus()) {
-      console.warn('Popup sem foco ao tentar ler a área de transferência');
-    }
-    try {
-      return await navigator.clipboard.readText();
-    } catch (e) {
-      console.error('Erro ao ler a área de transferência', e);
-      return '';
-    }
-  };
-
-  // --- Elements ----------------------------------------------------------------
-  const els = {
-    bulkInput: 'bulkInput',
-    queueBtn: 'queueButton',
-    bulkInputField: 'bulkQueueInput',
-    promptDelay: 'promptDelay',
-    promptDelayMin: 'promptDelayMin',
-    promptDelayMax: 'promptDelayMax',
-    delayContainer: 'delaySettings',
-    queueContainer: 'queueContainer',
-    queueList: 'queueList',
-    clearQueue: 'clearQueue',
-    promptSelect: 'promptSelect',
-    copyPrompt: 'copyPrompt',
-    note: 'note',
-    saveNote: 'save',
-    loadNote: 'load',
-    exportJson: 'exportJson',
-    exportLogs: 'exportLogs',
-    resetChat: 'resetChat',
-    openChatGPT: 'openChatGPT',
-    openShortcuts: 'openShortcuts',
-    status: 'status',
-    serviceStatus: 'serviceStatus',
-    lastResponse: 'lastResponse',
-    clicksContainer: 'clicksContainer',
-    startSelect: 'startSelect',
-    runClicks: 'runClicks',
-    clearClicks: 'clearClicks',
-    clickList: 'clickList',
-    pasteStart: 'pasteStart',
-    startAutomation: 'startAutomation',
-    copyResult: 'copyResult',
-    demoError: 'demoError',
-    shortcutsContainer: 'shortcutsContainer',
-    scQueue: 'scQueue',
-    scClearQueue: 'scClearQueue',
-    scCopyPrompt: 'scCopyPrompt',
-    scSaveNote: 'scSaveNote',
-    scLoadNote: 'scLoadNote',
-    scExportJson: 'scExportJson',
-    scExportLogs: 'scExportLogs',
-    scResetChat: 'scResetChat',
-    scSelect: 'scSelect',
-    scRun: 'scRun',
-    scClearClicks: 'scClearClicks',
-    scPasteStart: 'scPasteStart',
-    scStartAutomation: 'scStartAutomation',
-    scCopyResult: 'scCopyResult',
-    scDemoError: 'scDemoError',
-    saveShortcuts: 'saveShortcuts',
-    resetShortcuts: 'resetShortcuts'
-  };
-
-  // Map IDs to element references
-  Object.keys(els).forEach((key) => {
-    els[key] = $id(els[key]);
   });
 
-  // --- State ------------------------------------------------------------------
-  const defaultShortcuts = {
-    queue: 'Ctrl+Enter',
-    clearQueue: 'Ctrl+Shift+C',
-    copyPrompt: 'Ctrl+Shift+P',
-    applyTool: 'Ctrl+Shift+2',
-    saveNote: 'Ctrl+S',
-    loadNote: 'Ctrl+O',
-    exportJson: 'Ctrl+Shift+J',
-    exportLogs: 'Ctrl+Shift+L',
-    resetChat: 'Ctrl+Shift+X',
-    select: 'Ctrl+Shift+S',
-    run: 'Ctrl+Shift+R',
-    clearClicks: 'Ctrl+Shift+D',
-    pasteStart: 'Ctrl+Shift+V',
-    startAutomation: 'Ctrl+Shift+G',
-    copyResult: 'Ctrl+Shift+B',
-    demoError: 'Ctrl+Shift+M'
-  };
-  let shortcuts = { ...defaultShortcuts };
-  let conversationKey = '';
+  // theme
+  $("#toggleTheme").addEventListener("click", ()=>{
+    const body=document.body; body.dataset.theme = body.dataset.theme==="light" ? "dark":"light";
+  });
 
-  // Record shortcut combinations via popup inputs
-  const shortcutInputs = [
-    els.scQueue,
-    els.scClearQueue,
-    els.scCopyPrompt,
-    els.scSaveNote,
-    els.scLoadNote,
-    els.scExportJson,
-    els.scExportLogs,
-    els.scResetChat,
-    els.scSelect,
-    els.scRun,
-    els.scClearClicks,
-    els.scPasteStart,
-    els.scStartAutomation,
-    els.scCopyResult,
-    els.scDemoError,
-  ];
+  // open ChatGPT
+  $("#openChatGPT").addEventListener("click", ()=> chrome.tabs.create({url:"https://chat.openai.com/"}));
 
-  function handleShortcutInput(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
-    if (['Backspace', 'Delete'].includes(e.key)) {
-      e.target.value = '';
+  // generate queue
+  $("#generateQueue").addEventListener("click", ()=>{
+    const queue = buildQueue();
+    state.generated = queue;
+    $("#bulkQueueInput").value = queue;
+    updateCount();
+    $("#status").textContent = `Gerado ${splitQueue(queue).length} prompts.`;
+    $("#miniStatus").textContent = "fila pronta";
+    saveState();
+  });
+  $("#copyGenerated").addEventListener("click", async ()=>{
+    const text=$("#bulkQueueInput").value.trim(); if(!text) return;
+    await navigator.clipboard.writeText(text); $("#miniStatus").textContent = "copiado";
+  });
+
+  // queue actions
+  $("#copyButton").addEventListener("click", async ()=>{
+    const text=$("#bulkQueueInput").value.trim(); if(!text) return;
+    await navigator.clipboard.writeText(text); $("#miniStatus").textContent = "copiado";
+  });
+  $("#clearButton").addEventListener("click", ()=>{ $("#bulkQueueInput").value=""; updateCount(); $("#miniStatus").textContent="limpo"; });
+
+  $("#btnDedup").addEventListener("click", ()=>{ const arr=splitQueue($("#bulkQueueInput").value); const uniq=[...new Set(arr)]; $("#bulkQueueInput").value=uniq.join("~"); updateCount(); });
+  $("#btnShuffle").addEventListener("click", ()=>{ const arr=splitQueue($("#bulkQueueInput").value); for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } $("#bulkQueueInput").value=arr.join("~"); updateCount(); });
+  $("#btnSplitTilde").addEventListener("click", ()=>{ const arr=splitQueue($("#bulkQueueInput").value,"tilde"); $("#bulkQueueInput").value=arr.join("\n"); updateCount(); });
+  $("#btnSplitLines").addEventListener("click", ()=>{ const arr=splitQueue($("#bulkQueueInput").value,"lines"); $("#bulkQueueInput").value=arr.join("~"); updateCount(); });
+
+  $("#importFile").addEventListener("change", async (e)=>{
+    const file=e.target.files[0]; if(!file) return;
+    const text = await file.text();
+    $("#bulkQueueInput").value = text.trim();
+    updateCount();
+  });
+  $("#exportQueue").addEventListener("click", ()=>{
+    const text=$("#bulkQueueInput").value.trim(); const blob=new Blob([text],{type:"text/plain"});
+    const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="fila_forjaelo.txt"; a.click(); URL.revokeObjectURL(url);
+  });
+
+  $("#bulkQueueInput").addEventListener("input", updateCount);
+
+  $("#queueButton").addEventListener("click", ()=>{
+    const text=$("#bulkQueueInput").value.trim(); if(!text) return;
+    const prompts = splitQueue(text);
+    if (state.settings.mode === "manual") {
+      navigator.clipboard.writeText(text);
+      $("#miniStatus").textContent = "copiado (cole no ChatGPT)";
       return;
     }
-    e.target.value = formatCombo(e);
-  }
-
-  shortcutInputs.forEach((input) =>
-    input.addEventListener('keydown', handleShortcutInput)
-  );
-
-  // --- Rendering --------------------------------------------------------------
-  function renderList(container, items, onClick) {
-    container.innerHTML = '';
-    items.forEach((item, idx) => {
-      const li = document.createElement('li');
-      li.textContent = item;
-      li.dataset.index = idx;
-      li.style.cursor = 'pointer';
-      li.style.padding = '4px 0';
-      if (typeof onClick === 'function') li.addEventListener('click', () => onClick(idx));
-      container.appendChild(li);
-    });
-  }
-
-  const updateQueueList = () => {
-    storageGet({ queuedMessages: [] }, (data) => {
-      renderList(els.queueList, data.queuedMessages, (idx) => {
-        showLoading();
-        const msgs = data.queuedMessages;
-        msgs.splice(idx, 1);
-        storageSet({ queuedMessages: msgs }, () => {
-          sendToActiveTab({ action: 'setQueue', queue: msgs });
-          updateQueueList();
-          hideLoading();
-        });
-      });
-    });
-  };
-
-  const updateClickList = () => {
-    storageGet({ customClicks: [] }, (data) => {
-      renderList(els.clickList, data.customClicks);
-    });
-  };
-
-  // --- Initialization ---------------------------------------------------------
-  showLoading();
-  sendToActiveTab({ action: 'getConversationKey' }, (resp) => {
-    conversationKey = resp?.key || '';
-    storageGet({ automationResults: {} }, (res) => {
-      const result = res.automationResults[conversationKey] || '';
-      els.lastResponse.value = result;
-      if (result) {
-        els.status.textContent = 'Resultado da automação salvo localmente.';
-        setTimeout(() => (els.status.textContent = ''), 2000);
-      }
-      updateQueueList();
-      updateClickList();
-      hideLoading();
+    chrome.runtime.sendMessage({ type:"enqueue", prompts, settings: state.settings }, (resp)=>{
+      $("#miniStatus").textContent = (resp && resp.ok) ? "enviando..." : "falhou";
     });
   });
 
-  // Load shortcuts
-  storageGet({ shortcuts: defaultShortcuts }, (data) => {
-    shortcuts = { ...defaultShortcuts, ...(data.shortcuts || {}) };
-    els.scQueue.value = shortcuts.queue;
-    els.scClearQueue.value = shortcuts.clearQueue;
-    els.scCopyPrompt.value = shortcuts.copyPrompt;
-    els.scSaveNote.value = shortcuts.saveNote;
-    els.scLoadNote.value = shortcuts.loadNote;
-    els.scExportJson.value = shortcuts.exportJson;
-    els.scExportLogs.value = shortcuts.exportLogs;
-    els.scResetChat.value = shortcuts.resetChat;
-    els.scSelect.value = shortcuts.select;
-    els.scRun.value = shortcuts.run;
-    els.scClearClicks.value = shortcuts.clearClicks;
-    els.scPasteStart.value = shortcuts.pasteStart;
-    els.scStartAutomation.value = shortcuts.startAutomation;
-    els.scCopyResult.value = shortcuts.copyResult;
-    els.scDemoError.value = shortcuts.demoError;
-  });
-  // Load delays
-  storageGet(['promptDelay', 'promptDelayMin', 'promptDelayMax'], (res) => {
-    let { promptDelay, promptDelayMin, promptDelayMax } = res;
-    if (promptDelay == null) promptDelay = 10000 + Math.random() * 20000;
-    if (promptDelayMin == null || promptDelayMax == null) {
-      promptDelayMin = 10000;
-      promptDelayMax = 30000;
-    }
-    storageSet({ promptDelay, promptDelayMin, promptDelayMax });
-    els.promptDelay.value = promptDelay / 1000;
-    els.promptDelayMin.value = promptDelayMin / 1000;
-    els.promptDelayMax.value = promptDelayMax / 1000;
-  });
+  $("#pauseQueue").addEventListener("click", ()=> chrome.runtime.sendMessage({type:"control", action:"pause"}));
+  $("#resumeQueue").addEventListener("click", ()=> chrome.runtime.sendMessage({type:"control", action:"resume"}));
+  $("#cancelQueue").addEventListener("click", ()=> chrome.runtime.sendMessage({type:"control", action:"cancel"}));
 
-  // Load saved note
-  storageGet(['savedNote'], (res) => {
-    els.note.value = res.savedNote || '';
-  });
+  // presets
+  $("#presetDia").addEventListener("click", ()=>applyPreset("dia"));
+  $("#presetProjeto").addEventListener("click", ()=>applyPreset("projeto"));
+  $("#presetSemana").addEventListener("click", ()=>applyPreset("semana"));
+  $("#presetCrise").addEventListener("click", ()=>applyPreset("crise"));
 
-  // Populate promptSelect com grupos de prompts
-  const promptGroups = window.PROMPT_GROUPS || [];
-  promptGroups.forEach((group, gIdx) => {
-    const og = document.createElement('optgroup');
-    og.label = group.label;
-    group.items.forEach((p, pIdx) => {
-      const opt = document.createElement('option');
-      opt.value = `${gIdx}:${pIdx}`;
-      opt.textContent = p.title;
-      og.appendChild(opt);
-    });
-    els.promptSelect.appendChild(og);
-  });
-
-  // --- Event Listeners --------------------------------------------------------
-  // Collapsible sections are no longer toggled; all content is visible by default
-
-  // Theme toggle
-  const themeBtn = document.getElementById('toggleTheme');
-  if (themeBtn) {
-    themeBtn.addEventListener('click', () => {
-      const root = document.body;
-      const isDark = root.getAttribute('data-theme') === 'dark';
-      root.setAttribute('data-theme', isDark ? 'light' : 'dark');
-      themeBtn.textContent = isDark ? '🌙' : '☀️';
-    });
-  }
-
-  // Bulk queue input autoresize
-  els.bulkInputField.addEventListener('input', function () {
-    this.style.height = 'auto';
-    this.style.height = this.scrollHeight + 'px';
-  });
-
-  // Queue prompts
-  els.queueBtn.addEventListener('click', () => {
-    showLoading();
-    const messages = els.bulkInputField.value.split('~').map(m => m.trim()).filter(Boolean);
-    if (!messages.length) return hideLoading();
-
-    storageGet({ queuedMessages: [] }, (data) => {
-      const updated = data.queuedMessages.concat(messages);
-      storageSet({ queuedMessages: updated }, () => {
-        sendToActiveTab({ action: 'addToQueue', messages });
-        updateQueueList();
-        sendToActiveTab({ action: 'setQueue', queue: updated });
-        els.status.textContent = `${messages.length} prompts adicionados à fila`;
-        setTimeout(() => (els.status.textContent = ''), 1000);
-        hideLoading();
-      });
-    });
-    els.bulkInputField.value = '';
-    els.bulkInputField.style.height = '40px';
-  });
-
-  // Clear queue
-  els.clearQueue.addEventListener('click', () => {
-    showLoading();
-    storageSet({ queuedMessages: [] }, () => {
-      updateQueueList();
-      sendToActiveTab({ action: 'setQueue', queue: [] });
-      hideLoading();
-    });
-  });
-
-  // Copy prompt
-  els.copyPrompt.addEventListener('click', () => {
-    showLoading();
-    const [gIdx, pIdx] = (els.promptSelect.value || '').split(':').map(Number);
-    const group = promptGroups[gIdx];
-    const prompt = group && group.items[pIdx];
-    if (!prompt) return hideLoading();
-    navigator.clipboard.writeText(prompt.text).then(() => {
-      els.status.textContent = 'Prompt copiado';
-      setTimeout(() => (els.status.textContent = ''), 1000);
-      hideLoading();
-    });
-  });
-
-  // Note actions
-  els.saveNote.addEventListener('click', () => {
-    showLoading();
-    storageSet({ savedNote: els.note.value || '' }, () => {
-      els.status.textContent = 'Salvo';
-      setTimeout(() => (els.status.textContent = ''), 1000);
-      hideLoading();
-    });
-  });
-  els.loadNote.addEventListener('click', () => {
-    showLoading();
-    storageGet(['savedNote'], (res) => {
-      els.note.value = res.savedNote || '';
-      els.status.textContent = 'Carregado';
-      setTimeout(() => (els.status.textContent = ''), 1000);
-      hideLoading();
-    });
-  });
-
-  // Export JSON
-  els.exportJson.addEventListener('click', () => {
-    showLoading();
-    storageGet(['automationResults'], (res) => {
-      const result = (res.automationResults || {})[conversationKey] || '';
-      const blob = new Blob([JSON.stringify(result)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${(conversationKey||'responses').replace(/[^a-z0-9]/gi,'_').toLowerCase()}.json`;
-      link.click();
-      URL.revokeObjectURL(url);
-      els.lastResponse.value = result;
-      hideLoading();
-    });
-  });
-
-  // Export Logs
-  els.exportLogs.addEventListener('click', () => {
-    showLoading();
-    chrome.runtime.sendMessage({ type: 'getLogs' }, (res) => {
-      if (chrome.runtime.lastError) {
-        console.warn('getLogs failed:', chrome.runtime.lastError.message);
-        hideLoading();
-        return;
-      }
-      const blob = new Blob([JSON.stringify(res.logs || [])], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `logs_${Date.now()}.json`;
-      link.click();
-      URL.revokeObjectURL(url);
-      hideLoading();
-    });
-  });
-
-  // Reset Chat
-  els.resetChat.addEventListener('click', () => {
-    showLoading();
-    sendToActiveTab({ action: 'resetConversation' }, () => {
-      sendToActiveTab({ action: 'getConversationKey' }, (r) => {
-        conversationKey = r?.key || '';
-        els.lastResponse.value = '';
-        els.status.textContent = 'Chat redefinido';
-        setTimeout(() => (els.status.textContent = ''), 1000);
-        hideLoading();
-      });
-    });
-  });
-
-  // Tool application with automatic selection based on clipboard
-  async function runAutomationShortcut() {
-    showLoading();
-    const clip = await safeReadClipboard();
-    const text = (clip || '').trim();
-    if (!text) {
-      els.status.textContent = 'Área de transferência vazia';
-      setTimeout(() => (els.status.textContent = ''), 2000);
-      return hideLoading();
-    }
-    sendToActiveTab({ action: 'applyToolClipboardAutomation' }, (res) => {
-      if (!res?.success) {
-        els.status.textContent = 'Falha ao iniciar automação';
-        setTimeout(() => (els.status.textContent = ''), 2000);
-      }
-      hideLoading();
-    });
-  }
   
-  // Selection & Clicks
-  els.startSelect.addEventListener('click', () => {
-    showLoading();
-    sendToActiveTab({ action: 'startSelection' }, () => {
-      els.status.textContent = 'Modo de seleção ativado';
-      setTimeout(() => (els.status.textContent = ''), 1000);
-      hideLoading();
+  // ---- Aplicar Agora ----
+  const cen = $("#cenarioDireto");
+  if (cen) {
+    const opts = [{id:"ALL", nome:"Tudo (A–N)"}].concat(TRILHAS.map(t=>({id:t.id, nome:t.nome})));
+    cen.innerHTML = opts.map(o=>`<option value="${o.id}">${o.nome}</option>`).join("");
+    $("#btnGerarDefaults")?.addEventListener("click", ()=>{
+      const id = cen.value;
+      const queue = (id==="ALL") ? buildAllDefaults() : buildQueueFromDefaults(id);
+      $("#bulkQueueInput").value = queue;
+      updateCount();
+      $("#miniStatus").textContent = "fila pronta (defaults)";
     });
-  });
-  els.runClicks.addEventListener('click', () => {
-    showLoading();
-    sendToActiveTab({ action: 'runClicks' }, () => {
-      els.status.textContent = 'Executando cliques';
-      setTimeout(() => (els.status.textContent = ''), 1000);
-      hideLoading();
-    });
-  });
-  els.clearClicks.addEventListener('click', () => {
-    showLoading();
-    storageSet({ customClicks: [] }, () => {
-      updateClickList();
-      hideLoading();
-    });
-  });
-
-  // Automation actions
-  els.pasteStart.addEventListener('click', () => {
-    showLoading();
-    sendToActiveTab({ action: 'pasteStart' }, hideLoading);
-  });
-
-  els.copyResult.addEventListener('click', () => {
-    showLoading();
-    storageGet(['automationResults'], (res) => {
-      const result = (res.automationResults || {})[conversationKey] || '';
-      navigator.clipboard.writeText(JSON.stringify(result)).then(() => {
-        els.status.textContent = 'Resultado copiado';
-        setTimeout(() => (els.status.textContent = ''), 1000);
-        hideLoading();
-      });
-    });
-  });
-
-  els.startAutomation.addEventListener('click', () => {
-    showLoading();
-    sendToActiveTab({ action: 'startAutomation' }, hideLoading);
-  });
-
-  els.demoError.addEventListener('click', () => {
-    showLoading();
-    sendToActiveTab({ action: 'demoError' }, hideLoading);
-  });
-
-  els.openChatGPT.addEventListener('click', () => {
-    const url = chrome.runtime.getURL('redirect.html');
-    chrome.tabs.create({ url });
-  });
-
-  els.openShortcuts.addEventListener('click', (e) => {
-    e.preventDefault();
-    chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
-  });
-
-  // Save Shortcuts
-  els.saveShortcuts.addEventListener('click', () => {
-    showLoading();
-    shortcuts = {
-      ...shortcuts,
-      queue: els.scQueue.value || defaultShortcuts.queue,
-      clearQueue: els.scClearQueue.value || defaultShortcuts.clearQueue,
-      copyPrompt: els.scCopyPrompt.value || defaultShortcuts.copyPrompt,
-      saveNote: els.scSaveNote.value || defaultShortcuts.saveNote,
-      loadNote: els.scLoadNote.value || defaultShortcuts.loadNote,
-      exportJson: els.scExportJson.value || defaultShortcuts.exportJson,
-      exportLogs: els.scExportLogs.value || defaultShortcuts.exportLogs,
-      resetChat: els.scResetChat.value || defaultShortcuts.resetChat,
-      select: els.scSelect.value || defaultShortcuts.select,
-      run: els.scRun.value || defaultShortcuts.run,
-      clearClicks: els.scClearClicks.value || defaultShortcuts.clearClicks,
-      pasteStart: els.scPasteStart.value || defaultShortcuts.pasteStart,
-      startAutomation: els.scStartAutomation.value || defaultShortcuts.startAutomation,
-      copyResult: els.scCopyResult.value || defaultShortcuts.copyResult,
-      demoError: els.scDemoError.value || defaultShortcuts.demoError
-    };
-    storageSet({ shortcuts }, () => {
-      els.status.textContent = 'Atalhos salvos';
-      setTimeout(() => (els.status.textContent = ''), 1000);
-      hideLoading();
-    });
-  });
-
-  // Reset Shortcuts
-  els.resetShortcuts.addEventListener('click', () => {
-    showLoading();
-    shortcuts = { ...defaultShortcuts };
-    els.scQueue.value = shortcuts.queue;
-    els.scClearQueue.value = shortcuts.clearQueue;
-    els.scCopyPrompt.value = shortcuts.copyPrompt;
-    els.scSaveNote.value = shortcuts.saveNote;
-    els.scLoadNote.value = shortcuts.loadNote;
-    els.scExportJson.value = shortcuts.exportJson;
-    els.scExportLogs.value = shortcuts.exportLogs;
-    els.scResetChat.value = shortcuts.resetChat;
-    els.scSelect.value = shortcuts.select;
-    els.scRun.value = shortcuts.run;
-    els.scClearClicks.value = shortcuts.clearClicks;
-    els.scPasteStart.value = shortcuts.pasteStart;
-    els.scStartAutomation.value = shortcuts.startAutomation;
-    els.scCopyResult.value = shortcuts.copyResult;
-    els.scDemoError.value = shortcuts.demoError;
-    storageSet({ shortcuts }, () => {
-      els.status.textContent = 'Atalhos restaurados';
-      setTimeout(() => (els.status.textContent = ''), 1000);
-      hideLoading();
-    });
-  });
-
-  // Message listener for selection updates
-  chrome.runtime.onMessage.addListener((msg) => {
-    if (msg.type === 'selectionAdded') updateClickList();
-  });
-
-  // Keyboard shortcuts
-  function formatCombo(e) {
-    const parts = [];
-    e.ctrlKey && parts.push('Ctrl');
-    e.shiftKey && parts.push('Shift');
-    e.altKey && parts.push('Alt');
-    const key = e.key.length === 1 ? e.key.toUpperCase() : e.key;
-    parts.push(key);
-    return parts.join('+');
-  }
-  document.addEventListener('keydown', (e) => {
-    if (['INPUT','TEXTAREA'].includes(e.target.tagName) || e.target.isContentEditable) return;
-    const combo = formatCombo(e);
-    if (combo === shortcuts.queue)      { e.preventDefault(); els.queueBtn.click(); }
-    if (combo === shortcuts.clearQueue) { e.preventDefault(); els.clearQueue.click(); }
-    if (combo === shortcuts.copyPrompt) { e.preventDefault(); els.copyPrompt.click(); }
-    if (combo === shortcuts.applyTool)  { e.preventDefault(); runAutomationShortcut(); }
-    if (combo === shortcuts.saveNote)   { e.preventDefault(); els.saveNote.click(); }
-    if (combo === shortcuts.loadNote)   { e.preventDefault(); els.loadNote.click(); }
-    if (combo === shortcuts.exportJson) { e.preventDefault(); els.exportJson.click(); }
-    if (combo === shortcuts.exportLogs) { e.preventDefault(); els.exportLogs.click(); }
-    if (combo === shortcuts.resetChat)  { e.preventDefault(); els.resetChat.click(); }
-    if (combo === shortcuts.select)     { e.preventDefault(); els.startSelect.click(); }
-    if (combo === shortcuts.run)        { e.preventDefault(); els.runClicks.click(); }
-    if (combo === shortcuts.clearClicks){ e.preventDefault(); els.clearClicks.click(); }
-    if (combo === shortcuts.pasteStart){ e.preventDefault(); els.pasteStart.click(); }
-    if (combo === shortcuts.startAutomation){ e.preventDefault(); els.startAutomation.click(); }
-    if (combo === shortcuts.copyResult){ e.preventDefault(); els.copyResult.click(); }
-    if (combo === shortcuts.demoError) { e.preventDefault(); els.demoError.click(); }
-  });
-
-  // Service status polling
-  const updateServiceStatus = () => {
-    chrome.runtime.sendMessage({ type: 'status' }, (bg) => {
-      if (chrome.runtime.lastError) {
-        console.warn('status check failed:', chrome.runtime.lastError.message);
+    $("#btnEnfileirarDefaults")?.addEventListener("click", ()=>{
+      const text = $("#bulkQueueInput").value.trim();
+      if (!text) return;
+      const prompts = splitQueue(text);
+      if (state.settings.mode === "manual") {
+        navigator.clipboard.writeText(text);
+        $("#miniStatus").textContent = "copiado (cole no ChatGPT)";
         return;
       }
-      const bgText = bg.status || 'serviço em segundo plano ocioso';
-      sendToActiveTab({ action: 'status' }, (ct) => {
-        const ctText = ct?.status ? `${ct.status} - queue: ${ct.queueLength}` : 'script de conteúdo ocioso';
-        const modeText = ' - modo teclado';
-        els.serviceStatus.textContent = `${bgText} | ${ctText}${modeText}`;
+      chrome.runtime.sendMessage({ type:"enqueue", prompts, settings: state.settings }, (resp)=>{
+        $("#miniStatus").textContent = (resp && resp.ok) ? "enviando..." : "falhou";
       });
     });
-  };
-  updateServiceStatus();
-  setInterval(updateServiceStatus, 3000);
-
-  if (typeof logger !== 'undefined' && logger.wrapObject) {
-    logger.wrapObject({
-      renderList,
-      formatCombo,
-    }, 'popup.');
   }
-});
+
+  // Prefill fila com "Dia Completo" (defaults) na 1ª abertura
+  if (!state.generated && !$("#bulkQueueInput").value.trim()) {
+    const q = buildQueueFromDefaults("A");
+    $("#bulkQueueInput").value = q;
+    updateCount();
+    $("#miniStatus").textContent = "fila padrão pronta";
+  }
+
+  renderFields();
+  updateCount();
+}
+
+function renderFields(){
+  const wrap=$("#trilhaFields");
+  const trilha = TRILHAS.find(t=>t.id===state.trilha) || TRILHAS[0];
+  wrap.innerHTML = trilha.fields.map(f=>{
+    const val=(state.values[trilha.id]?.[f.key])||"";
+    return `<label for="${trilha.id}_${f.key}">${f.label}</label>
+            <textarea id="${trilha.id}_${f.key}" data-key="${f.key}" rows="3" class="small">${val}</textarea>`;
+  }).join("");
+  trilha.fields.forEach(f=>{
+    const el=document.getElementById(`${trilha.id}_${f.key}`);
+    el.addEventListener("input", ()=>{
+      state.values[trilha.id]=state.values[trilha.id]||{};
+      state.values[trilha.id][f.key]=el.value;
+      saveState();
+    });
+  });
+}
+
+function buildQueue(){
+  const trilha = TRILHAS.find(t=>t.id===state.trilha) || TRILHAS[0];
+  const values = state.values[trilha.id] || {};
+  const arr = trilha.build(values);
+  return arr.join("~");
+}
+
+function splitQueue(text, prefer="auto"){
+  let raw = text;
+  if (prefer==="tilde") return raw.split("~").map(s=>s.trim()).filter(Boolean);
+  if (prefer==="lines") return raw.split(/\r?\n/g).map(s=>s.trim()).filter(Boolean);
+  // auto: aceita ~ e/ou linhas
+  const hasTilde = raw.includes("~");
+  if (hasTilde) return raw.split("~").map(s=>s.trim()).filter(Boolean);
+  return raw.split(/\r?\n/g).map(s=>s.trim()).filter(Boolean);
+}
+
+function updateCount(){
+  const arr = splitQueue($("#bulkQueueInput").value);
+  $("#count").textContent = String(arr.length);
+  $("#pillCount").textContent = String(arr.length);
+}
+
+// ======== Presets (mesmos do pacote anterior) ========
+// popup.js — ForjaElo 6.7 · SSA 8.7
+// Salva/recupera estado, gera filas com "~" e dispara para content.js
+
+const $ = (q) => document.querySelector(q);
+const $$ = (q) => Array.from(document.querySelectorAll(q));
+
+// === Templates das Trilhas (A–N) ===
+// Cada trilha tem: id, nome, fields (campos "Base:") e um builder que retorna array de prompts
+const TRILHAS = [
+  {
+    id: "A",
+    nome: "A) Dia Completo (abrange todos os elos)",
+    fields: [
+      {key:"agenda", label:"Agenda do dia + contexto"},
+      {key:"prioridades", label:"Prioridades (Topo)"},
+      {key:"ruidos", label:"Fontes de distração"},
+      {key:"tarefas_criticas", label:"Tarefas críticas (T2)"},
+      {key:"preferencias", label:"Preferências/Condições (Box)"},
+      {key:"ambiente", label:"Ambiente (Refúgio/ritual)"},
+      {key:"escopo", label:"Escopo do principal"},
+      {key:"log", label:"Log rápido"},
+      {key:"resultados", label:"Resultados do dia"}
+    ],
+    build: (v) => [
+      `SSA, sintetize meu “porquê de hoje” (Chama 5) em 1 frase e liste 3 sinais visíveis de progresso. Base: ‹${v.agenda||""}›.`,
+      `SSA, gere meu Top-3 neutro: T1 Propósito (Chama), T2 Resultado (Talentos/Potência), T3 Elo do dia (calendário). Base: ‹${v.prioridades||""}›.`,
+      `SSA, defina limites (Central): padrão neutro, avisos de “limitar exposição”, janelas de e-mail/mensagens e no-go list. Base: ‹${v.ruidos||""}›.`,
+      `SSA, formate um checklist Potência (5–7 itens) com timers (25/5) para executar o T2; inclua checkpoints, travas e critério de “pronto”. Base: ‹${v.tarefas_criticas||""}›.`,
+      `SSA, proponha 1 microtreino Box (≤10 min) para energia mental/física antes do bloco principal; inclua como medir (0–5). Base: ‹${v.preferencias||""}›.`,
+      `SSA, crie Elo do Refúgio: ritual de 3–5 min (desligar, respirar, anotar 1 insight) com gatilho e horário. Base: ‹${v.ambiente||""}›.`,
+      `SSA, desenhe Sprint10 (10 passos curtos) para fechar o principal do dia até as 20:00, com timers e travas objetivas. Base: ‹${v.escopo||""}›.`,
+      `SSA, registre métrica leve do dia: esforço/energia/atrito/progresso (0–5) + 3 aprendizados. Base: ‹${v.log||""}›.`,
+      `SSA, faça revisão EOD em 6 bullets (feito/pendente/atrito/aprendizados/agradecer/próximo foco) e gere o Top-3 neutro de amanhã. Base: ‹${v.resultados||""}›.`
+    ]
+  },
+  {
+    id: "B",
+    nome: "B) Projeto (zero → envio)",
+    fields: [
+      {key:"briefing", label:"Briefing/Projeto"},
+      {key:"escopo", label:"Escopo"},
+      {key:"pipeline", label:"Pipeline/Processos"},
+      {key:"stakeholders", label:"Stakeholders/decisão"},
+      {key:"preferencias", label:"Preferências (Box)"},
+      {key:"parcerias", label:"Parcerias/Leads (Ide)"},
+      {key:"agenda", label:"Agenda/Pausas"},
+      {key:"entrega", label:"Entrega-alvo (D1)"}
+    ],
+    build: (v) => [
+      `SSA, com base no texto abaixo, crie: (1) objetivo em 1 frase; (2) 3 passos mínimos; (3) travas + Sprint10. Texto: ‹${v.briefing||""}›.`,
+      `SSA, descreva o resultado esperado (T2 Resultado) em 1 frase e 3 critérios de excelência (Talentos). Base: ‹${v.escopo||""}›.`,
+      `SSA, mapeie processos (Potência): checklist curto (5–7) com timers e checkpoints; inclua “pronto/feito”. Base: ‹${v.pipeline||""}›.`,
+      `SSA, defina limites (Central) específicos do projeto: canais, horários, pontos de decisão; inclua aviso padrão de “limitar exposição”. Base: ‹${v.stakeholders||""}›.`,
+      `SSA, proponha microtreino Box (≤10 min) para iniciar os blocos e reduzir atrito. Base: ‹${v.preferencias||""}›.`,
+      `SSA, gere 2 roteiros Ide sem dados sensíveis: (a) convite frio de 3 linhas; (b) follow-up curto com CTA. Base: ‹${v.parcerias||""}›.`,
+      `SSA, crie Elo do Refúgio para pausas estratégicas (3–5 min, passos claros). Base: ‹${v.agenda||""}›.`,
+      `SSA, desenhe Sprint10 para o primeiro envio (D1) com estimativas rápidas, travas e “corte seguro”. Base: ‹${v.entrega||""}›.`
+    ]
+  },
+  {
+    id: "C",
+    nome: "C) Semana Completa",
+    fields: [
+      {key:"metas", label:"Metas/resultados-chave"},
+      {key:"calendario", label:"Calendário da semana"},
+      {key:"rotina", label:"Rotina/Contexto profundo"},
+      {key:"tipo_trabalho", label:"Tipo de trabalho (QA/empacote)"},
+      {key:"preferencias", label:"Preferências Box"},
+      {key:"leads", label:"Leads/Lista (Ide)"},
+      {key:"energia", label:"Energia/Descanso"},
+      {key:"backlog", label:"Backlog"},
+      {key:"registros", label:"Registros para retro"}
+    ],
+    build: (v) => [
+      `SSA, consolide meu Propósito da semana (Chama) em 1 frase e 3 resultados-chave observáveis. Base: ‹${v.metas||""}›.`,
+      `SSA, gere um Roadmap Potência (processos + timers) para 5 dias: blocos focais/delivery/revisão. Base: ‹${v.calendario||""}›.`,
+      `SSA, estabeleça padrões Central: janelas de comunicação, regras de contexto profundo, e checklist “entrar/sair de foco”. Base: ‹${v.rotina||""}›.`,
+      `SSA, defina critérios Talentos (excelência/QA) e template de empacotamento de entregas. Base: ‹${v.tipo_trabalho||""}›.`,
+      `SSA, agende microtreinos Box (≤10 min) distribuídos na semana (força, mobilidade, respiração). Base: ‹${v.preferencias||""}›.`,
+      `SSA, crie 3 roteiros Ide (contato inicial, nurture curto, fechamento com CTA) sem dados sensíveis. Base: ‹${v.leads||""}›.`,
+      `SSA, janelas Refúgio (descanso/detox): horários, rituais e limites práticos. Base: ‹${v.energia||""}›.`,
+      `SSA, Sprint10 semanal: 10 passos de execução com checkpoints por dia. Base: ‹${v.backlog||""}›.`,
+      `SSA, retro semanal em 8 bullets (ganhos, perdas, atritos, riscos, oportunidades, aprendizados, descarte, foco seguinte). Base: ‹${v.registros||""}›.`
+    ]
+  },
+  {
+    id: "D",
+    nome: "D) Funil de Parcerias (Ide + Resultado)",
+    fields: [
+      {key:"produto", label:"Produto/serviço (proposta de valor)"},
+      {key:"perfil", label:"Perfil do contato"},
+      {key:"meta_contatos", label:"Meta de contatos"},
+      {key:"etica", label:"Ética/limites"}
+    ],
+    build: (v) => [
+      `SSA, extraia proposta de valor em 1 frase e 3 provas de credibilidade. Base: ‹${v.produto||""}›.`,
+      `SSA, crie 3 roteiros Ide sem dados sensíveis: DM curta, e-mail de 4 linhas e mensagem de follow-up (72h) — cada um com CTA. Base: ‹${v.perfil||""}›.`,
+      `SSA, monte checklist Potência (5–7) com timers para disparo, registro, qualificação e revisão diária do funil (T2 Resultado). Base: ‹${v.meta_contatos||""}›.`,
+      `SSA, defina travas Central: limites por dia, horário de outreach e regras de não-insistência. Base: ‹${v.etica||""}›.`,
+      `SSA, Sprint10 para “primeiros 10 contatos” com checkpoints objetivos e “stop-loss” de tempo. Base: ‹${v.meta_contatos||""}›.`
+    ]
+  },
+  {
+    id: "E",
+    nome: "E) Qualidade & Excelência (Talentos)",
+    fields: [
+      {key:"entrega", label:"Entrega"},
+      {key:"workflow", label:"Workflow/QA"},
+      {key:"prazos", label:"Prazos"}
+    ],
+    build: (v) => [
+      `SSA, descreva “o que é excelente” em 1 frase e defina 3 critérios mensuráveis de QA. Base: ‹${v.entrega||""}›.`,
+      `SSA, gere checklist Potência de QA (5–7) com timers por etapa (rascunho → revisão → empacote → envio). Base: ‹${v.workflow||""}›.`,
+      `SSA, inclua travas para não-perfeccionismo (Central): limite de revisões e gatilho de envio. Base: ‹${v.prazos||""}›.`,
+      `SSA, Sprint10 de empacotamento (10 passos curtos) para fechar hoje. Base: ‹${v.entrega||""}›.`
+    ]
+  },
+  {
+    id: "F",
+    nome: "F) Foco Profundo (proteção + execução)",
+    fields: [
+      {key:"tarefa", label:"Tarefa / Bloco principal"},
+      {key:"setup", label:"Setup de foco (ambiente/notifs)"},
+      {key:"subtarefas", label:"Subtarefas"},
+      {key:"preferencias", label:"Preferências Box"},
+      {key:"observacoes", label:"Observações"}
+    ],
+    build: (v) => [
+      `SSA, resuma o propósito do bloco em 1 frase e derive 3 micro-metas não negociáveis. Base: ‹${v.tarefa||""}›.`,
+      `SSA, defina protocolo Central “entrar em foco”: ambiente, notificações, lista de corte e tempo total. Base: ‹${v.setup||""}›.`,
+      `SSA, checklist Potência com timers (25/5) para as 3 micro-metas e checkpoint de meio do bloco. Base: ‹${v.subtarefas||""}›.`,
+      `SSA, microtreino Box de 5–8 min (respiração + mobilidade) para antes/depois. Base: ‹${v.preferencias||""}›.`,
+      `SSA, mini-retro (EOB): feito, atrito, uma melhoria. Base: ‹${v.observacoes||""}›.`
+    ]
+  },
+  {
+    id: "G",
+    nome: "G) Energia & Antifragilidade (Box + Refúgio)",
+    fields: [
+      {key:"condicao", label:"Condição do dia (0–5)"},
+      {key:"ambiente", label:"Ambiente (gatilhos)"},
+      {key:"rotina", label:"Rotina (retorno ao foco)"},
+      {key:"top3", label:"Top‑3 do dia"}
+    ],
+    build: (v) => [
+      `SSA, avalie energia (0–5) e proponha 2 microtreinos Box (≤10 min): um de ativação e um de recuperação. Base: ‹${v.condicao||""}›.`,
+      `SSA, crie Elo do Refúgio (3–5 min) com passos claros e gatilho contextual. Base: ‹${v.ambiente||""}›.`,
+      `SSA, defina “zona segura” Central para pausas: duração, frequência e regras de retorno ao foco. Base: ‹${v.rotina||""}›.`,
+      `SSA, checklist Potência para integrar treino/pausas sem quebrar o T2 do dia. Base: ‹${v.top3||""}›.`
+    ]
+  },
+  {
+    id: "H",
+    nome: "H) Limites & Comunhão (Central)",
+    fields: [
+      {key:"ruidos", label:"Fontes de ruído/distração"},
+      {key:"relacoes", label:"Relacionamentos/Times"},
+      {key:"governanca", label:"Governança/Decisão"}
+    ],
+    build: (v) => [
+      `SSA, mapeie ruídos e distrações e formule 5 avisos prontos de “limitar exposição” para diferentes contextos (reunião, chat, e-mail, família, social). Base: ‹${v.ruidos||""}›.`,
+      `SSA, desenhe um protocolo de “contexto neutro”: como pedir/ativar e quando encerrar. Base: ‹${v.relacoes||""}›.`,
+      `SSA, defina janelas de comunicação e escadas de decisão (quem decide o quê e quando). Base: ‹${v.governanca||""}›.`
+    ]
+  },
+  {
+    id: "I",
+    nome: "I) Finanças & Resultado (Talentos)",
+    fields: [
+      {key:"negocio", label:"Negócio (modelo simples)"},
+      {key:"planilha", label:"Planilha simples (descrição)"},
+      {key:"regras", label:"Regras/limites"}
+    ],
+    build: (v) => [
+      `SSA, derive 3 indicadores simples de resultado (receita, margem, tickets/semana) e metas de curto prazo. Base: ‹${v.negocio||""}›.`,
+      `SSA, crie checklist Potência (5–7) para registro financeiro básico diário (entradas/saídas/observações). Base: ‹${v.planilha||""}›.`,
+      `SSA, defina travas Central: tetos de gasto, aprovações e janela de revisão semanal. Base: ‹${v.regras||""}›.`
+    ]
+  },
+  {
+    id: "J",
+    nome: "J) Crise/Incêndio (corte seguro)",
+    fields: [
+      {key:"situacao", label:"Situação/Problema"},
+      {key:"agenda", label:"Agenda a pausar"},
+      {key:"recursos", label:"Recursos disponíveis"},
+      {key:"stakeholders", label:"Stakeholders"},
+      {key:"aprendizados", label:"Aprendizados"}
+    ],
+    build: (v) => [
+      `SSA, sintetize o problema em 1 frase e 3 consequências se nada for feito. Base: ‹${v.situacao||""}›.`,
+      `SSA, gere um “corte seguro” (Central): o que pausar/adiar e por quanto tempo. Base: ‹${v.agenda||""}›.`,
+      `SSA, Sprint10 emergencial: 10 passos curtos para estabilizar em 90–120 min, com timers e pontos de não-retorno. Base: ‹${v.recursos||""}›.`,
+      `SSA, plano de comunicação (Ide) em 3 bullets para partes interessadas (sem dados sensíveis). Base: ‹${v.stakeholders||""}›.`,
+      `SSA, lições rápidas (3 bullets) e critério para encerrar o modo crise. Base: ‹${v.aprendizados||""}›.`
+    ]
+  },
+  {
+    id: "K",
+    nome: "K) Revisão Diária & Arquivação",
+    fields: [
+      {key:"log", label:"Log do dia"},
+      {key:"prioridades", label:"Prioridades (amanhã)"},
+      {key:"preferencias", label:"Preferências de template (registros)"}
+    ],
+    build: (v) => [
+      `SSA, faça uma revisão em 6 bullets: feito/pendente/atrito/aprendizados/agradecer/próximo foco. Base: ‹${v.log||""}›.`,
+      `SSA, gere meu Top-3 neutro de amanhã: T1 Propósito (Chama), T2 Resultado (Talentos/Potência), T3 Elo do dia (calendário). Base: ‹${v.prioridades||""}›.`,
+      `SSA, crie um template de “Registros” (anotações fáceis) com campos: data, foco, decisões, riscos, métrica 0–5 e anexos. Base: ‹${v.preferencias||""}›.`
+    ]
+  },
+  {
+    id: "L",
+    nome: "L) Biblioteca de Mensagens (Ide)",
+    fields: [
+      {key:"perfil", label:"Perfil do contato"},
+      {key:"funil", label:"Funil/processo"}
+    ],
+    build: (v) => [
+      `SSA, gere 4 roteiros Ide sem dados sensíveis: (1) pedido de contexto, (2) convite para chamada de 15 min, (3) agradecimento + próximo passo, (4) follow-up curto pós-reunião; todos com 1 CTA claro. Base: ‹${v.perfil||""}›.`,
+      `SSA, checklist Potência para enviar e registrar respostas em até 30 min/dia, com timers e limites (Central). Base: ‹${v.funi||v.funil||""}›.`
+    ]
+  },
+  {
+    id: "M",
+    nome: "M) Aprendizado Contínuo",
+    fields: [
+      {key:"tema", label:"Tema de estudo"},
+      {key:"hipoteses", label:"Hipóteses/Experimentos"},
+      {key:"calendario", label:"Calendário/Proteção de blocos"}
+    ],
+    build: (v) => [
+      `SSA, crie um “Diário de Aprendizado” com campos: insight, onde usei, próximo experimento, escore 0–5. Base: ‹${v.tema||""}›.`,
+      `SSA, Sprint10 de experimentos (10 micro-testes) com estimativas rápidas e critério de descarte. Base: ‹${v.hipoteses||""}›.`,
+      `SSA, protocolo Central para encerrar experimentos e proteger blocos de entrega. Base: ‹${v.calendario||""}›.`
+    ]
+  },
+  {
+    id: "N",
+    nome: "N) Top‑3 Neutro (rápido)",
+    fields: [
+      {key:"agenda", label:"Agenda + prioridades"},
+      {key:"tarefas", label:"Tarefas (T2)"},
+      {key:"rotina", label:"Rotina/energia"}
+    ],
+    build: (v) => [
+      `SSA, gere meu Top-3 neutro: T1 Propósito (Chama), T2 Resultado (Talentos/Potência), T3 Elo do dia (calendário). Base: ‹${v.agenda||""}›.`,
+      `SSA, formate checklist Potência para o T2 com timers (25/5) e Sprint10 final de revisão. Base: ‹${v.tarefas||""}›.`,
+      `SSA, defina uma janela Refúgio (15–20 min) e 1 microtreino Box (≤10 min) para sustentar energia. Base: ‹${v.rotina||""}›.`
+    ]
+  }
+];
+
+// ===== UI =====
+let state = {
+  trilha: "A",
+  values: {},
+  settings: { delay:0, jitterMin:0, jitterMax:0, mode:"auto" },
+  generated: ""
+};
+
+function saveState() {
+  chrome.storage.local.set({ state });
+}
+function loadState() {
+  chrome.storage.local.get("state", (data) => {
+    if (data.state) state = data.state;
+    initUI();
+  });
+}
+
+function initUI() {
+  // popular select de trilhas
+  const sel = $("#trilha");
+  sel.innerHTML = TRILHAS.map(t => `<option value="${t.id}">${t.nome}</option>`).join("");
+  sel.value = state.trilha || "A";
+  sel.addEventListener("change", () => {
+    state.trilha = sel.value;
+    
+// init
+document.addEventListener("DOMContentLoaded", loadState);

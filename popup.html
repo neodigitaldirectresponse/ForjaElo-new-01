@@ -1,355 +1,193 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <!-- A largura fixa evita zoom indesejado em popups de extensao -->
-  <meta name="viewport" content="width=500, initial-scale=1">
-  <title>ForjaElo Motor</title>
-
-  <!-- Variáveis e Reset -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ForjaElo · Fila SSA PRO</title>
   <style>
     :root {
-      --color-primary: #2563eb;
-      --color-primary-hover: #1d4ed8;
-      --color-bg: #fff;
-      --color-text: #1a1a1a;
-      --color-muted: #64748b;
-      --color-surface: #f3f4f6;
-      --radius: 8px;
-      --gap: 1rem;
-      --transition: 0.3s ease;
+      --bg:#0b0c10; --card:#111217; --muted:#2a2c34; --text:#e6e6e6;
+      --accent:#10b981; --accent-2:#3b82f6; --danger:#ef4444; --warn:#f59e0b;
     }
-    [data-theme="dark"] {
-      --color-bg: #1a1a1a;
-      --color-text: #e5e5e5;
-      --color-muted: #a0aec0;
-      --color-surface: #2d3748;
-      --color-primary: #3b82f6;
-      --color-primary-hover: #2563eb;
+    [data-theme="light"] {
+      --bg:#f6f7fb; --card:#ffffff; --muted:#dfe3ef; --text:#101216;
+      --accent:#059669; --accent-2:#2563eb; --danger:#b91c1c; --warn:#b45309;
     }
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    * { box-sizing: border-box; }
+    body { margin:0; padding:0.75rem; background:var(--bg); color:var(--text);
+      font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial;}
+    main { max-width: 980px; margin: 0 auto; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap; }
+    h1 { margin:0; font-size:1.2rem; }
+    .muted { color:#9aa3b2; font-size:.9rem; }
+    .row { display:flex; gap:.75rem; flex-wrap:wrap; }
+    .card { background:var(--card); border:1px solid var(--muted); border-radius:14px; padding:.9rem; box-shadow:0 2px 10px rgba(0,0,0,.15); flex:1 1 360px; min-width:320px;}
+    .card h2 { margin:.1rem 0 .5rem; font-size:1rem; }
+    label { display:block; font-weight:600; margin:.5rem 0 .25rem; }
+    input[type="text"], textarea, select, input[type="number"] {
+      width:100%; padding:.6rem; border-radius:8px; border:1px solid var(--muted);
+      background:transparent; color:var(--text);
     }
-    html, body {
-      height: 100%;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      background-color: var(--color-bg);
-      color: var(--color-text);
-      line-height: 1.5;
-      overflow-y: auto;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: var(--gap);
-    }
-    a { color: var(--color-primary); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    /* Container principal */
-    main {
-      /* largura ideal entre 300 e 500px */
-      width: 100%;
-      min-width: 300px;
-      max-width: 500px;
-      max-height: 800px;
-      min-height: 500px;
-      overflow-y: auto;
-      overflow-x: auto;
-      display: flex;
-      flex-direction: column;
-      gap: var(--gap);
-    }
-    header {
-      text-align: center;
-      margin-bottom: var(--gap);
-    }
-    h1, h2 {
-      margin-bottom: 0.5em;
-    }
-
-    /* Forms e botões */
-    label {
-      display: block;
-      margin-bottom: 0.25em;
-      font-size: 0.875rem;
-      color: var(--color-muted);
-      font-weight: 500;
-    }
-    input, select, textarea, button {
-      font-size: 0.875rem;
-      border: 1px solid #e2e8f0;
-      border-radius: var(--radius);
-      padding: 0.5em;
-      width: 100%;
-      background: var(--color-bg);
-      color: var(--color-text);
-      transition: border-color var(--transition);
-    }
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: var(--color-primary);
-    }
-    button {
-      cursor: pointer;
-      background-color: var(--color-primary);
-      color: #fff;
-      border: none;
-      margin-top: 0.5em;
-      transition: background-color var(--transition);
-    }
-    button:hover, button:focus {
-      background-color: var(--color-primary-hover);
-    }
-
-    a.button-link {
-      display: block;
-      width: 100%;
-      text-align: center;
-      cursor: pointer;
-      background-color: var(--color-primary);
-      color: #fff;
-      border-radius: var(--radius);
-      padding: 0.5em;
-      margin-top: 0.5em;
-      text-decoration: none;
-      transition: background-color var(--transition);
-    }
-    a.button-link:hover, a.button-link:focus {
-      background-color: var(--color-primary-hover);
-    }
-
-    /* Collapsible styles removed: sections are always visible */
-
-    /* Spinner/Overlay */
-    .spinner {
-      width: 14px;
-      height: 14px;
-      border: 2px solid #999;
-      border-top-color: transparent;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      display: inline-block;
-      vertical-align: middle;
-      margin-right: 0.25em;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    #loadingOverlay {
-      display: none;
-      position: absolute;
-      bottom: 0.5rem;
-      right: 0.5rem;
-      pointer-events: none;
-      z-index: 2000;
-    }
-    #loadingOverlay.is-active { display: flex; }
-    .overlay-content {
-      background: rgba(0,0,0,0.75);
-      color: #fff;
-      padding: 0.5em 1em;
-      border-radius: var(--radius);
-      display: flex;
-      align-items: center;
-      gap: 0.5em;
-    }
-
-    /* Tabelas de atalhos */
-    table {
-      width: 100%;
-      font-size: 0.75rem;
-      border-collapse: collapse;
-      margin-bottom: var(--gap);
-    }
-    th, td {
-      padding: 0.5em;
-      text-align: left;
-    }
-    #builtinShortcuts th {
-      border-bottom: 1px solid #ccc;
-    }
-
-    /* Fieldsets para grupos */
-    fieldset {
-      border: 1px solid #e2e8f0;
-      border-radius: var(--radius);
-      padding: var(--gap);
-      margin-bottom: var(--gap);
-    }
-    legend {
-      padding: 0 0.5em;
-      font-weight: 600;
-      color: var(--color-text);
-    }
-
-    /* Responsividade */
-    @media (max-width: 480px) {
-      body { padding: 0.5rem; }
-      main {
-        width: 100%;
-        max-height: 100%;
-      }
-    }
-
-    /* Ajuste para displays de alta densidade */
-    @media (min-resolution: 2dppx) {
-      main { max-width: 500px; }
-    }
+    textarea { min-height:84px; }
+    .btn { background:var(--accent-2); color:#fff; border:none; padding:.55rem .8rem; border-radius:10px; font-weight:700; cursor:pointer; }
+    .btn.alt { background:var(--accent); } .btn.ghost { background:transparent; border:1px solid var(--muted); color:var(--text); }
+    .btn.warn { background:var(--warn); } .btn.danger { background:var(--danger); }
+    .toolbar { display:flex; gap:.5rem; flex-wrap:wrap; }
+    small.help { display:block; color:#9aa3b2; margin-top:.35rem; }
+    .grid-2 { display:grid; grid-template-columns: repeat(2,1fr); gap:.6rem; }
+    .grid-3 { display:grid; grid-template-columns: repeat(3,1fr); gap:.6rem; }
+    .footer { margin-top:.75rem; display:flex; justify-content:space-between; align-items:center; gap:.5rem; flex-wrap:wrap;}
+    .tag { display:inline-block; background:var(--muted); padding:.2rem .5rem; border-radius:999px; font-size:.72rem; }
+    .pill { border:1px dashed var(--muted); border-radius:10px; padding:.35rem .5rem; display:inline-flex; gap:.35rem; align-items:center;}
+    .flex-between { display:flex; justify-content:space-between; align-items:center; gap:.5rem; }
   </style>
 </head>
-
 <body data-theme="light">
   <main>
     <header>
-      <h1>ForjaElo · Fila do ChatGPT</h1>
-      <p style="font-size:0.9rem; margin:0.25em 0;">SSA 8.7 (Executor Cego) só organiza o que você decidir.</p>
-      <button id="toggleTheme" aria-label="Alternar tema">🌙</button>
-      <button id="openChatGPT">Abrir ChatGPT</button>
-      <a href="README.md" target="_blank" class="button-link">README</a>
+      <div class="left">
+        <h1>ForjaElo · Fila do ChatGPT</h1>
+        <span class="tag">SSA 8.7</span>
+        <span class="tag">ForjaElo 6.7</span>
+        <span class="tag">v8.7.2 PRO</span>
+      </div>
+      <div class="toolbar">
+        <button id="toggleTheme" class="btn ghost">Tema</button>
+        <button id="openChatGPT" class="btn">Abrir ChatGPT</button>
+        <a href="README.md" target="_blank" class="btn alt">README</a>
+      </div>
     </header>
-    <p style="font-size:0.85rem; margin-bottom:0.5em;">
-      Configure os atalhos globais em
-      <a id="openShortcuts" href="#">chrome://extensions/shortcuts</a>.<br>
-      Ativos: Abrir ChatGPT rapidamente (Ctrl+Shift+1), Aplicar e Automatizar (Ctrl+Shift+2),
-      Colar texto e iniciar automação (Ctrl+Shift+3), Copiar JSON do resultado (Ctrl+Shift+4).
-    </p>
+    <p class="muted">Preencha os campos “Base:”, gere a fila com “~” e envie. Nenhum dado sai do seu navegador.</p>
 
-    <!-- Prompts em Lote -->
-    <h2>Adicionar prompts em lote</h2>
-    <div id="bulkInput">
-      <textarea id="bulkQueueInput" placeholder="Ex: prompt1~prompt2~prompt3" rows="4"></textarea>
-      <small style="display:block; margin-bottom:0.5em;">Separe vários prompts com “~”.</small>
-      <button id="queueButton">Enfileirar Prompts</button>
+    <div class="row">
+      <section class="card" style="flex:2 1 560px">
+        <div class="flex-between">
+          <h2>Gerador de Trilhas</h2>
+          <div class="toolbar">
+            <button id="presetDia" class="btn ghost">Dia</button>
+            <button id="presetProjeto" class="btn ghost">Projeto</button>
+            <button id="presetSemana" class="btn ghost">Semana</button>
+            <button id="presetCrise" class="btn ghost">Crise</button>
+          </div>
+        </div>
+        <label for="trilha">Trilha</label>
+        <select id="trilha"></select>
+        <div id="trilhaFields"></div>
+        <div class="toolbar" style="margin-top:0.6rem;">
+          <button id="generateQueue" class="btn">Gerar Fila (~)</button>
+          <button id="copyGenerated" class="btn ghost">Copiar</button>
+          <span id="status" class="muted"></span>
+        </div>
+        <small class="help">Os campos abaixo são as “Bases:” pedidas por cada prompt. Use só o necessário.</small>
+      </section>
+
+      <section class="card">
+        <h2>Fila</h2>
+        <label for="bulkQueueInput">Cole/Edite sua fila</label>
+        <textarea id="bulkQueueInput" placeholder="Aceita separador ~ ou quebra de linha" rows="8"></textarea>
+        <div class="toolbar" style="margin-top:.6rem;">
+          <button id="btnDedup" class="btn ghost">Deduplicar</button>
+          <button id="btnShuffle" class="btn ghost">Embaralhar</button>
+          <button id="btnSplitTilde" class="btn ghost">Dividir por ~</button>
+          <button id="btnSplitLines" class="btn ghost">Dividir por linhas</button>
+        </div>
+        <div class="toolbar" style="margin-top:.4rem;">
+          <input type="file" id="importFile" accept=".txt" />
+          <button id="exportQueue" class="btn ghost">Exportar .txt</button>
+          <button id="clearButton" class="btn ghost">Limpar</button>
+        </div>
+        <small class="help">Contagem: <span id="count">0</span> prompts</small>
+      </section>
     </div>
 
-    <!-- Atrasos -->
-    <h2>Configurações de Atraso</h2>
-    <div id="delaySettings">
-      <label for="promptDelay">Atraso fixo (s)</label>
-      <input id="promptDelay" type="number" min="0" max="300" value="0">
-      <label for="promptDelayMin">Atraso aleatório – mínimo (s)</label>
-      <input id="promptDelayMin" type="number" min="0" max="300" value="1">
-      <label for="promptDelayMax">Atraso aleatório – máximo (s)</label>
-      <input id="promptDelayMax" type="number" min="0" max="600" value="3">
+    <div class="row">
+      <section class="card">
+        <h2>Atrasos & Modos</h2>
+        <div class="grid-3">
+          <div>
+            <label for="promptDelay">Atraso fixo (s)</label>
+            <input id="promptDelay" type="number" min="0" max="600" value="2">
+          </div>
+          <div>
+            <label for="promptDelayMin">Aleatório — mín (s)</label>
+            <input id="promptDelayMin" type="number" min="0" max="600" value="0">
+          </div>
+          <div>
+            <label for="promptDelayMax">Aleatório — máx (s)</label>
+            <input id="promptDelayMax" type="number" min="0" max="600" value="0">
+          </div>
+        </div>
+        <label for="sendMode">Modo</label>
+        <select id="sendMode">
+          <option value="auto">Automático (cola e envia no ChatGPT)</option>
+          <option value="manual">Manual (só copia para você colar)</option>
+        </select>
+        <label for="sendStrategy">Estratégia de envio</label>
+        <select id="sendStrategy">
+          <option value="enter">Enter</option>
+          <option value="click">Clique no botão</option>
+          <option value="both">Ambos (mais compatível)</option>
+        </select>
+        <div class="grid-3">
+          <div>
+            <label for="waitMode">Espera</label>
+            <select id="waitMode">
+              <option value="timeOnly">Somente tempo</option>
+              <option value="detectStream">Detectar geração</option>
+            </select>
+          </div>
+          <div>
+            <label for="maxWait">Tempo máx. (s)</label>
+            <input id="maxWait" type="number" min="5" max="900" value="120">
+          </div>
+          <div>
+            <label for="retries">Retries por prompt</label>
+            <input id="retries" type="number" min="0" max="5" value="1">
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Enviar</h2>
+        <div class="toolbar">
+          <button id="queueButton" class="btn alt">Enfileirar</button>
+          <button id="pauseQueue" class="btn warn">Pausar</button>
+          <button id="resumeQueue" class="btn">Retomar</button>
+          <button id="cancelQueue" class="btn danger">Cancelar</button>
+          <button id="copyButton" class="btn ghost">Copiar</button>
+        </div>
+        <small class="help">Status: <span id="miniStatus">pronto</span></small>
+      </section>
     </div>
 
-    <!-- Exemplos de PromptChains -->
-    <fieldset>
-      <legend>Exemplos de PromptChains</legend>
-      <label for="promptSelect">Escolha um exemplo</label>
-      <select id="promptSelect"></select>
-      <button id="copyPrompt">Copiar Prompt</button>
-    </fieldset>
-
-    <!-- Mensagens Enfileiradas -->
-    <h2>Mensagens Enfileiradas (<span id="queueCount">0</span>)</h2>
-    <div id="queueContainer">
-      <ul id="queueList" style="list-style:none; padding-left:0;"></ul>
-      <button id="clearQueue">Limpar Fila</button>
+    
+    <div class="row">
+      <section class="card" style="flex:2 1 560px">
+        <h2>Aplicar Agora (sem preencher)</h2>
+        <label for="cenarioDireto">Cenário</label>
+        <select id="cenarioDireto"></select>
+        <div class="toolbar" style="margin-top:.6rem;">
+          <button id="btnGerarDefaults" class="btn alt">Gerar (defaults)</button>
+          <button id="btnEnfileirarDefaults" class="btn">Enfileirar Agora</button>
+        </div>
+        <small class="help">Gera uma fila 100% funcional com textos padrão — sem precisar preencher campos “Base:”.</small>
+      </section>
+      <section class="card">
+        <h2>Ajuda rápida</h2>
+        <ul style="margin:.4rem 0 .2rem .9rem; padding:0;">
+          <li>**Automático** envia no ChatGPT; **Manual** só copia.</li>
+          <li>Se o Enter virar quebra de linha, use **Estratégia: Clique**.</li>
+          <li>Ative **Detectar geração** p/ filas longas.</li>
+          <li>Use **Pausar/Retomar/Cancelar** quando precisar.</li>
+        </ul>
+      </section>
     </div>
 
-    <!-- Notas e Ações -->
-    <fieldset>
-      <legend>Notas &amp; Ações</legend>
-      <textarea id="note" placeholder="Escreva sua nota aqui..." rows="4"></textarea>
-      <div style="display:flex; gap:0.5em; flex-wrap:wrap;">
-        <button id="save">Salvar Nota</button>
-        <button id="load">Carregar Nota</button>
-        <button id="exportJson">Exportar JSON</button>
-        <button id="exportLogs">Exportar Logs</button>
-        <button id="resetChat">Resetar Chat</button>
-      </div>
-    </fieldset>
-
-    <!-- Último Resultado -->
-    <fieldset>
-      <legend>Último Resultado</legend>
-      <textarea id="lastResponse" readonly rows="3"></textarea>
-      <div style="margin-top:0.5em; display:flex; gap:0.5em; flex-wrap:wrap;">
-        <button id="copyResult">Copiar Resultado</button>
-        <div id="status" style="color:green;"></div>
-      </div>
-      <div id="serviceStatus" style="font-size:0.75rem; color:#555;"></div>
-    </fieldset>
-
-    <!-- Ações de Automação -->
-    <fieldset>
-      <legend>Ações de Automação</legend>
-      <div style="display:flex; gap:0.5em; flex-wrap:wrap;">
-        <button id="pasteStart">Colar &amp; Iniciar</button>
-        <button id="startAutomation">Iniciar Automação</button>
-        <button id="demoError">Exemplo Erro</button>
-      </div>
-    </fieldset>
-
-    <!-- Cliques Personalizados -->
-    <h2>Cliques Personalizados</h2>
-    <div id="clicksContainer">
-      <button id="startSelect">Selecionar Elementos</button>
-      <ul id="clickList" style="list-style:none; padding-left:1em; margin:0.5em 0;"></ul>
-      <div style="display:flex; gap:0.5em; flex-wrap:wrap;">
-        <button id="runClicks">Executar Cliques</button>
-        <button id="clearClicks">Limpar</button>
-      </div>
-    </div>
-
-    <!-- Atalhos de Teclado -->
-    <h2>Atalhos de Teclado</h2>
-    <div id="shortcutsContainer">
-      <p style="font-size:0.75rem; margin-bottom:0.5em;">
-        Os atalhos a seguir já existem no ChatGPT. Evite usá‑los novamente.
-      </p>
-      <table id="builtinShortcuts">
-        <thead>
-          <tr><th>Ação</th><th>Windows/Linux</th><th>macOS</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Buscar em chats</td><td>Ctrl+K</td><td>⌘+K</td></tr>
-          <tr><td>Abrir novo chat</td><td>Ctrl+Shift+O</td><td>⌘+Shift+O</td></tr>
-          <tr><td>Alternar barra lateral</td><td>Ctrl+Shift+S</td><td>⌘+Shift+S</td></tr>
-          <tr><td>Copiar último bloco</td><td>Ctrl+Shift+;</td><td>⌘+Shift+;</td></tr>
-          <tr><td>Excluir chat</td><td>Ctrl+Shift+Backspace</td><td>⌘+Shift+Delete</td></tr>
-          <tr><td>Focar entrada</td><td>Shift+Esc</td><td>Shift+Esc</td></tr>
-          <tr><td>Mostrar atalhos</td><td>Ctrl+/</td><td>⌘+/</td></tr>
-          <tr><td>Definir instruções</td><td>Ctrl+Shift+I</td><td>⌘+Shift+I</td></tr>
-        </tbody>
-      </table>
-      <table id="shortcutsTable">
-        <tr><td>Enfileirar</td><td><input id="scQueue" placeholder="Ctrl+Enter"></td></tr>
-        <tr><td>Limpar Fila</td><td><input id="scClearQueue" placeholder="Ctrl+Shift+C"></td></tr>
-        <tr><td>Copiar Prompt</td><td><input id="scCopyPrompt" placeholder="Ctrl+Shift+P"></td></tr>
-        <tr><td>Salvar Nota</td><td><input id="scSaveNote" placeholder="Ctrl+S"></td></tr>
-        <tr><td>Carregar Nota</td><td><input id="scLoadNote" placeholder="Ctrl+O"></td></tr>
-        <tr><td>Exportar JSON</td><td><input id="scExportJson" placeholder="Ctrl+Shift+J"></td></tr>
-        <tr><td>Exportar Logs</td><td><input id="scExportLogs" placeholder="Ctrl+Shift+L"></td></tr>
-        <tr><td>Resetar Chat</td><td><input id="scResetChat" placeholder="Ctrl+Shift+X"></td></tr>
-        <tr><td>Selecionar Elementos</td><td><input id="scSelect" placeholder="Ctrl+Shift+S"></td></tr>
-        <tr><td>Executar Cliques</td><td><input id="scRun" placeholder="Ctrl+Shift+R"></td></tr>
-        <tr><td>Limpar Cliques</td><td><input id="scClearClicks" placeholder="Ctrl+Shift+D"></td></tr>
-        <tr><td>Colar &amp; Iniciar</td><td><input id="scPasteStart" placeholder="Ctrl+Shift+V"></td></tr>
-        <tr><td>Iniciar Automação</td><td><input id="scStartAutomation" placeholder="Ctrl+Shift+G"></td></tr>
-        <tr><td>Copiar Resultado</td><td><input id="scCopyResult" placeholder="Ctrl+Shift+B"></td></tr>
-        <tr><td>Exemplo Erro</td><td><input id="scDemoError" placeholder="Ctrl+Shift+M"></td></tr>
-      </table>
-      <div style="display:flex; gap:0.5em;">
-        <button id="saveShortcuts">Salvar Atalhos</button>
-        <button id="resetShortcuts">Restaurar Padrões</button>
-      </div>
+    <div class="footer">
+      <span class="muted">© ForjaElo 6.7 · SSA 8.7 — PRO</span>
+      <span class="pill">Fila: <strong id="pillCount">0</strong></span>
     </div>
   </main>
-
-  <!-- Loading overlay for background operations -->
-  <div id="loadingOverlay">
-    <div class="overlay-content">
-      <span class="spinner"></span>
-      <span>Carregando...</span>
-    </div>
-  </div>
-
-  <!-- Scripts (defer para performance) -->
-  <script src="prompts.js" defer></script>
-  <script src="popup.js" defer></script>
+  <script src="popup.js"></script>
 </body>
 </html>
